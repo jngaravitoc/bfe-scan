@@ -84,36 +84,75 @@ def read_cov_elements(filename, nfiles, n, l, m, n_min=0, n_max=1000, snaps=0):
     return S_mean_cov_matrix, T_mean_cov_matrix, ST_mean_cov_matrix
 
 
-def covariance_matrix_builder(S, T, SS, TT, ST, mass):
+def covariance_matrix_builder(Snlm, Tnlm, SnlmSnlm, TnlmTnlm, SnlmTnlm, mass):
     """
+    Build the covariance matrix of the expansion coefficients
+
+    Parameters
+    ----------
+    Snlm : float, `~numpy.ndarray`
+        The value of the cosine expansion coefficient
+    Tnlm : float, `~numpy.ndarray`
+        The value of the sine expansion coefficient.
+    SnlmSnlm : float, `~numpy.ndarray`
+        The value of the variance of the Snlm coefficients.
+    TnlmTnlm : float, `~numpy.ndarray`
+        The value of the variance of the Tnlm coefficients.
+    SnlmTnlm : float, `~numpy.ndarray`
+        The value of the covariance of the Snlm and Tnlm coefficients.
+    mass : float.
+        Mass of a particle used to compute the expansion.
+    Returns
+    -------
+    cov_matrix : float, `~numpy.ndarray`
+        Covariance matrix of the coefficients.
+
 
     """
     cov_matrix = np.zeros((2,2))
-    cov_matrix[0][0] = SS - mass*S**2
-    cov_matrix[0][1] = ST - mass*S*T
-    cov_matrix[1][1] = TT - mass*T**2
+    cov_matrix[0][0] = SnlmSnlm - mass*Snlm**2
+    cov_matrix[0][1] = SnlmTnlm - mass*Snlm*Tnlm
+    cov_matrix[1][1] = TnlmTnlm - mass*Tnlm**2
     cov_matrix[1][0] = cov_matrix[0][1]
 
     return cov_matrix
     
     
-def smoothing(S, T, varS, varT):
+def smoothing(Snlm, Tnlm, varSnlm, varTnlm):
     """
-    Computes optimal smoothing following Eq.8 in Weinberg+96.
+    Computes optimal smoothing of the coefficients $a$ as defined in Equation 8 in
+    Weinberg+96.
+
+    b = 1 / (1 + var(a)/a^2) 
     
-    returns:
+    For the SCF expansion, the smoothing is computed for each set of
+    coefficients Snlm and Tnlm separately. This, implies that the coefficients
+    need to be in a basis set where they are not correlated.
+
+    Parameters
+    ----------
+    Snlm : float, `~numpy.ndarray`
+        The value of the cosine expansion coefficient
+    Tnlm : float, `~numpy.ndarray`
+        The value of the sine expansion coefficient.
+    varSnlm : float, `~numpy.ndarray`
+        Variance of the coefficients Snlm
+    varTnlm : float, `~numpy.ndarray`
+        Variance of the coefficients Tnlm
+    Returns
     --------
     
-    bs
-    bt : 
+    bSnlm :
+    bTnlm : 
     """
-    bs = 1 / (1 + (varS/S**2))
-    bt = 1 / (1 + (varT/T**2))
-    if S == 0:
-        bs=0
-    if T == 0:
-        bt=0
-    return bs, bt
+    bSnlm = 1 / (1 + (varSnlm/Snlm**2))
+    bTnlm = 1 / (1 + (varTnlm/Tnlm**2))
+    if Snlm == 0:
+        bSnlm = 0
+    if Tnlm == 0:
+        bTnlm = 0
+
+    return bSnlm, bTnlm
 
 def smoothing_coeff_uncorrelated(cov_matrix, S, T, sn=0, verb=False):
     # SVD decomposition of the covariance matrix
@@ -174,7 +213,7 @@ def smooth_coeff_matrix(S, T, SS, TT, ST, mass, nmax, lmax, mmax, sn):
                 n_coefficients += n_coeff
     return S_matrix_smooth, T_matrix_smooth, n_coefficients
     
- 
+"""
 def smoothing_biased(cov_matrix, coeff, m, sn):
     """
     Coefficients smoothing 
@@ -216,7 +255,7 @@ def smooth_coeff_matrix_biased(S, T, SS, TT, mass, nmax, lmax, mmax, sn):
                 
     return S_matrix_smooth, T_matrix_smooth, n_coeff_s, n_coeff_t
     
-
+"""
 #if __name__ == "__main__":
     
 def coeff_uncorrelated(S, T, SS, TT, ST, mass, sn=0, verb=False):
