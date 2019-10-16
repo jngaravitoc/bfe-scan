@@ -51,7 +51,7 @@ def bound_particles(pot, pos, vel):
     T = vmag_lmc**2/2
     V = pot
 
-    lmc_bound = np.where(T+V<=0)[0]
+    lmc_bound = np.where(2*T+V<=0)[0]
 
     return pos[lmc_bound], vel[lmc_bound]
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
                                                          lmax)
     print('Bound particles computed')
     
-    mass_bound = np.ones(len(ids_bound))
+    mass_bound = np.ones(N_bound)*mass[0]
     print(pos_bound[0])
     print(vel_bound[0])
     lmc_bound = np.array([pos_bound[:,0], pos_bound[:,1], pos_bound[:,2], 
