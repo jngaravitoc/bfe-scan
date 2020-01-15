@@ -1,3 +1,4 @@
+
 """
 Pipeline to generate ascii files of the MW particles, LMC bound particles and
 MW+LMC unbound particles
@@ -138,7 +139,7 @@ if __name__ == "__main__":
         pos_halo_tr, vel_halo_tr, mass_tr, ids_tr = g2a.truncate_halo(halo[0], halo[1], halo[3], halo[4], rcut_halo)
        
         pos_halo_tr, vel_halo_tr, mass_tr = g2a.sample_halo(pos_halo_tr, vel_halo_tr, mass_tr, npart_sample)
-
+        print("Done computing halo particles")
         #satellite = reads.read_snap_coordinates(args.in_path, args.snapname+"{:03d}".format(i), args.n_halo_part, com_frame='sat', galaxy='sat')
 
 
