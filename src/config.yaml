@@ -1,0 +1,19 @@
+---
+inpath : "/home/xzk/work/github/MW_anisotropy/code/test_snaps/"
+snapname : "MWLMC3_100M_new_b0"
+outpath : "~/work/github/bfe-scan/outputs/"
+outname : "MWLMC3_100M_test.txt"
+npartHalo : 100000000
+samplePart : 100000
+nmax : 10
+lmax : 5
+rs : 40.85 
+ncores : 4
+mpi : 1
+rhaloCut : 400
+initSnap : 90
+finalSnap : 91
+SatBFE : 1
+
+...
+

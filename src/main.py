@@ -16,11 +16,13 @@ author: github/jngaravitoc
     
     TODO:
 
-        Implement all input parameters:
-            - Make a parameter file
+        Parameter file:
+            - Make different categories for Host and Satellite?
+            - Think that if this is going to be general we might need more than
+              one satellite. 
 
         Implement all optional outputs:
-            - random halo sample 
+            - random satellite sample
             - output ascii files
             - what if the COM is provided?
             - use ids to track bound - unbound particles -- think about cosmo
@@ -57,7 +59,9 @@ import LMC_bounded as lmcb
 import gadget_to_ascii as g2a
 import reading_snapshots as reads
 import coeff_parallel as cop
-from argparse import ArgumentParser
+import sys
+import allvars
+
 
 def main(pool, nmax, lmax, r_s, var=True):
     worker = cop.Coeff_parallel(pos, mass, r_s, var)
@@ -78,73 +82,46 @@ if __name__ == "__main__":
     #			  "MWLMC5_100M_new_b0_109",
     #			  "MWLMC6_100M_new_b0_2_113",
     #			  "MWLMC6_100M_new_b1_2_114"]
-
-    parser = ArgumentParser(description="")
-    
-    parser.add_argument(dest="in_path", default="",
-                       type=str, help="Number of processes (uses multiprocessing.)")
-
-    parser.add_argument(dest="snapname", default="",
-                       type=str, help="Number of processes (uses multiprocessing.)")
-
-    parser.add_argument(dest="out_name", default="",
-                       type=str, help="Number of processes (uses multiprocessing.)")
-
-    parser.add_argument(dest="nmax", default="",
-                       type=int, help="Number of processes (uses multiprocessing.)")
-
-    parser.add_argument(dest="lmax", default="",
-                       type=int, help="Number of processes (uses multiprocessing.)")
-
-    parser.add_argument(dest="rs", default="",
-                       type=float, help="Number of processes (uses multiprocessing.)")
-
-    parser.add_argument(dest="n_halo_part", default="",
-                       type=int, help="Number of processes (uses multiprocessing.)")
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--ncores", dest="n_cores", default=1,
-                       type=int, help="Number of processes (uses multiprocessing.)")
-    group.add_argument("--mpi", dest="mpi", default=False, 
-                      action="store_true", help="Run with MPI.")
-
-    args = parser.parse_args()
-
-
-    print(args.in_path)
-    print(args.snapname)
-    print(args.out_name)
-    print(args.nmax)
-    print(args.nmax)
-    print(args.lmax)
-    print(args.rs)
-    print(args.n_halo_part)
-    print(args.n_cores)
-    print(args.mpi)
-    
-    npart_sample = 20000000
-    #n_part_sample_sat = 1000000
-    rcut_halo = 400
-    sample = 0
-    sample_lmc = 0
-    init_snap=91
-    final_snap=92
-    snaps_ascii=False
+    paramfile = sys.argv[1]
+    params = allvars.readparams(paramfile)
+    in_path = params[0]
+    snapname = params[1]
+    outpath = params[2]
+    out_name = params[3]
+    n_halo_part = params[4]
+    npart_sample = params[5]
+    nmax = params[6]
+    lmax = params[7]
+    rs = params[8]
+    ncores = params[9]
+    mpi = params[10]
+    rcut_halo = params[11]
+    init_snap=params[12]
+    final_snap=params[13]
+    SatBFE = params[14] 
     #for i in range(0, len(snap_names)):
     for i in range(init_snap, final_snap):
         print("**************************")
-        print("Computing ascii files on snapshot {}".format(i))
-        halo = reads.read_snap_coordinates(args.in_path, args.snapname+"{:03d}".format(i), args.n_halo_part, com_frame='MW', galaxy='MW')
-        # read_snap_coordinates returns pos, vel, pot, mass
-        pos_halo_tr, vel_halo_tr, mass_tr, ids_tr = g2a.truncate_halo(halo[0], halo[1], halo[3], halo[4], rcut_halo)
-       
-        pos_halo_tr, vel_halo_tr, mass_tr = g2a.sample_halo(pos_halo_tr, vel_halo_tr, mass_tr, npart_sample)
-        print("Done computing halo particles")
-        #satellite = reads.read_snap_coordinates(args.in_path, args.snapname+"{:03d}".format(i), args.n_halo_part, com_frame='sat', galaxy='sat')
+        # Loading data:
+        halo = reads.read_snap_coordinates(in_path, snapname+"_{:03d}".format(i), n_halo_part, com_frame='MW', galaxy='MW')
+        # Truncates halo:
+        if rcut_halo>0:
+            print("Truncating halo particles at {} kpc".format(rcut_halo))
+            pos_halo_tr, vel_halo_tr, mass_tr, ids_tr = g2a.truncate_halo(halo[0], halo[1], halo[3], halo[4], rcut_halo)
+        else : 
+            pos_halo_tr = halo[0]
+            vel_halo_tr = halo[1]
+            mass_tr = halo[3]
+            ids_tr = halo[4]
 
+        if npart_sample>0: 
+            print("Sampling halo particles with: {} particles".format(npart_sample))
+            pos_halo_tr, vel_halo_tr, mass_tr = g2a.sample_halo(pos_halo_tr, vel_halo_tr, mass_tr, npart_sample) 
 
-        #pos_sat_tr, vel_sat_tr, mass_sat_tr, ids_sat_tr = g2a.truncate_halo(satellite[0], satellite[1], satellite[3], satellite[4], rcut_halo)
-        #pos_sat_em, vel_sat_em, mass_sat_em, ids_sat_em = g2a.npart_satellite(pos_sat_tr, vel_sat_tr, ids_sat_tr, mass_sat_tr[0], mass_tr[0])
+        if SatBFE == 1:
+            satellite = reads.read_snap_coordinates(in_path, snapname+"_{:03d}".format(i), n_halo_part, com_frame='sat', galaxy='sat')
+            pos_sat_tr, vel_sat_tr, mass_sat_tr, ids_sat_tr = g2a.truncate_halo(satellite[0], satellite[1], satellite[3], satellite[4], rcut_halo)
+            pos_sat_em, vel_sat_em, mass_sat_em, ids_sat_em = g2a.npart_satellite(pos_sat_tr, vel_sat_tr, ids_sat_tr, mass_sat_tr[0], mass_tr[0])
         """
         assert np.abs(mass_sat_em[0]/mass_tr[0]-1)<1E-3, 'Error: particle mass of satellite different to particle mass of the halo'
         
@@ -201,13 +178,13 @@ if __name__ == "__main__":
 
         ## Run bfe here! 
         ## TODO: quick test run BFE with lmax=0 and nmax=20 to check that the first term is the largest
-        """
-        pool = schwimmbad.choose_pool(mpi=args.mpi,
-                                      processes=args.n_cores)
+        
+        pool = schwimmbad.choose_pool(mpi=mpi,
+                                      processes=n_cores)
         #results = cop.main(pool, pos_host_sat, mass_array, args.nmax, args.lmax, args.rs, var=True)
         pos = pos_halo_tr
         mass = mass_tr
-        results = main(pool, args.nmax, args.lmax, args.rs, var=True)
+        results = main(pool, nmax, lmax, rs, var=True)
         results_r = np.array(results)
         print('Done computing coefficients')
         Snlm=results_r[:,0]
@@ -215,5 +192,6 @@ if __name__ == "__main__":
         varSnlm=results_r[:,2]
         varTnlm=results_r[:,3]
         varSTnlm=results_r[:,4]
-        cop.write_coefficients(args.out_name+"snap_{:0>3d}.txt".format(i), Snlm, varSnlm, Tnlm,  varTnlm, varSTnlm, args.nmax, args.lmax, args.rs)
+        cop.write_coefficients(out_name+"snap_{:0>3d}.txt".format(i), Snlm, varSnlm, Tnlm,  varTnlm, varSTnlm, nmax, lmax, rs)
         print('Done writing coefficients')
+        """

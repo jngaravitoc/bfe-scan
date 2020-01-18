@@ -75,6 +75,7 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='MW', galaxy='MW'):
     
     """
     # Load data
+    print("Loading snapshot: "+path+snap)
     all_pos = readsnap(path+snap, 'pos', 'dm')
     all_vel = readsnap(path+snap, 'vel', 'dm')
     all_ids = readsnap(path+snap, 'pid', 'dm')
