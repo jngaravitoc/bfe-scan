@@ -106,7 +106,7 @@ def compute_coeff_parallel(pos, nmax, lmax, r_s, ncores):
 
     """
     #pool = schwimmbad.choose_pool(mpi=False, processes=ncores)
-    pool = schwimmbad.choose_pool(mpi=True, processes=2)
+    pool = schwimmbad.choose_pool(mpi=True, processes=ncores)
     results = main(pool, pos, mass, nmax, lmax, r_s)
     Snlm, Tnlm = coeff_matrix(results)
     return Snlm, Tnlm
