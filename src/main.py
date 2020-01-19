@@ -12,7 +12,7 @@ author: github/jngaravitoc
         - It separates a satellite galaxy from a host galaxy 
         - Compute COM of satellite and host galaxy
         - Compute bound and satellite unbound particles
-        - Run in parallel
+        - Run in parallel for the nlm list! 
     
     TODO:
 
@@ -32,6 +32,7 @@ author: github/jngaravitoc
         Implement checks:
             - equal mass particles (DONE)
             - com accuracy check
+            - plot figure with com of satellite and host for every snapshot..
             - BFE monopole term amplitude -- compute nmax=20, lmax=0 and check
                 larger term is 000
 
@@ -40,6 +41,8 @@ author: github/jngaravitoc
         * : fast to implement
         ** : may need some time to implement
 
+        Paralleization:
+            - Why results=pool() returns empty list if --ncores==1?
 
     - known issues:
         - currently multiprocessing return the following error when many
@@ -59,16 +62,42 @@ import LMC_bounded as lmcb
 import gadget_to_ascii as g2a
 import reading_snapshots as reads
 import coeff_parallel as cop
-import sys
 import allvars
+from argparse import ArgumentParser
+
+class BFECoeff:
+    def __init__(self, pos, mass):
+        self.pos = pos
+        self.mass = mass
+
+    def main(self, pool, nmax, lmax, r_s, var=True):
+        worker = cop.Coeff_parallel(self.pos, self.mass, r_s, var)
+        tasks = cop.nlm_list(nmax, lmax)
+        results = pool.map(worker, tasks)
+        pool.close()
+        return results
 
 
-def main(pool, nmax, lmax, r_s, var=True):
-    worker = cop.Coeff_parallel(pos, mass, r_s, var)
-    tasks = cop.nlm_list(nmax, lmax)
-    results = pool.map(worker, tasks)
-    pool.close()
-    return results
+class BFEPot:
+    def __init__(self, S, T, r_s):
+        self.S = S
+        self.T = T
+        self.r_s = r_s 
+
+    def main(self, pool, pos):
+        worker = lmcb.Pot_parallel(self.S, self.T, self.r_s)
+        tasks = list(zip(pos)) # for the particles?
+        results = pool.map(worker, tasks)
+        pool.close()
+        return results
+
+
+#def main(pool, nmax, lmax, r_s, var=True):
+#    worker = cop.Coeff_parallel(pos, mass, r_s, var)
+#    tasks = cop.nlm_list(nmax, lmax)
+#    results = pool.map(worker, tasks)
+#    pool.close()
+#    return results
 
 
 
@@ -82,7 +111,24 @@ if __name__ == "__main__":
     #			  "MWLMC5_100M_new_b0_109",
     #			  "MWLMC6_100M_new_b0_2_113",
     #			  "MWLMC6_100M_new_b1_2_114"]
-    paramfile = sys.argv[1]
+
+
+    parser = ArgumentParser(description="Parameters file for bfe-py")
+
+    parser.add_argument("--param", dest="paramFile", default=False,
+                       type=str, help="provide parameter file")
+
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--ncores", dest="n_cores", default=1,
+                       type=int, help="Number of processes (uses multiprocessing).")
+    group.add_argument("--mpi", dest="mpi", default=False,
+                       action="store_true", help="Run with MPI.")
+    global args
+    args = parser.parse_args()
+    
+
+    paramfile = args.paramFile
     params = allvars.readparams(paramfile)
     in_path = params[0]
     snapname = params[1]
@@ -100,6 +146,8 @@ if __name__ == "__main__":
     final_snap=params[13]
     SatBFE = params[14] 
     #for i in range(0, len(snap_names)):
+
+
     for i in range(init_snap, final_snap):
         print("**************************")
         # Loading data:
@@ -178,13 +226,22 @@ if __name__ == "__main__":
 
         ## Run bfe here! 
         ## TODO: quick test run BFE with lmax=0 and nmax=20 to check that the first term is the largest
-        
-        pool = schwimmbad.choose_pool(mpi=mpi,
-                                      processes=n_cores)
-        #results = cop.main(pool, pos_host_sat, mass_array, args.nmax, args.lmax, args.rs, var=True)
-        pos = pos_halo_tr
-        mass = mass_tr
-        results = main(pool, nmax, lmax, rs, var=True)
+        """
+
+        # TODO: Change this parmetetrs file to the ones read from  config.yaml
+        #armadillo = lmcb.find_bound_particles(pos_sat_em, vel_sat_em, mass_sat_em, ids_sat_em, 10, 20, 20)
+
+        pool = schwimmbad.choose_pool(mpi=args.mpi,
+                                      processes=args.n_cores)
+        pos = np.copy(pos_halo_tr)
+        mass = np.copy(mass_tr)
+
+        halo_coeff = BFECoeff(pos, mass)
+        results = halo_coeff.main(pool, nmax, lmax, rs, var=True)
+        #pos = pos_halo_tr
+        #mass = mass_tr
+        #results = main(pool, nmax, lmax, rs, var=True)
+        print(np.shape(results))
         results_r = np.array(results)
         print('Done computing coefficients')
         Snlm=results_r[:,0]
@@ -192,6 +249,10 @@ if __name__ == "__main__":
         varSnlm=results_r[:,2]
         varTnlm=results_r[:,3]
         varSTnlm=results_r[:,4]
-        cop.write_coefficients(out_name+"snap_{:0>3d}.txt".format(i), Snlm, varSnlm, Tnlm,  varTnlm, varSTnlm, nmax, lmax, rs)
-        print('Done writing coefficients')
-        """
+
+        halo_pot = BFEPot(Snlm, Tnlm, rs)
+        results_pot = halo_pot.main(pool, pos)
+
+        #cop.write_coefficients(out_name+"snap_{:0>3d}.txt".format(i), Snlm, varSnlm, Tnlm,  varTnlm, varSTnlm, nmax, lmax, rs)
+        #print('Done writing coefficients')
+        

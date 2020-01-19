@@ -10,32 +10,38 @@ usage: python LMC_bounded.py filename nmax lmax rs
 
 
 import numpy as np
-from gala.potential.scf._computecoeff import STnlm_discrete, STnlm_var_discrete
+import schwimmbad
 import gala.potential as gp
-
-def reading_particles(snap_name):
-    lmc_particles = np.loadtxt(snap_name)
-    pos = lmc_particles[:,0:3]
-    vel = lmc_particles[:,3:6]
-    ids = lmc_particles[:,6]
-    mass = lmc_particles[:,7]
-    Mtot = np.sum(mass)
-    #rand = np.random.randint(0, len(mass), 100000)
-    #mass_rand_part = (Mtot/1E5)*np.ones(100000)
-    #print('Total mass of the halo is:', np.sum(mass))
-    #print('Total mass of the sampled halo is:', np.sum(mass_rand_part))
-    #return pos[rand], vel[rand], mass_rand_part, ids[rand]
-    return pos, vel, mass, ids
+import coeff_parallel as cop
 
 
-def compute_scf_pot(pos, rs, nmax, lmax, mass):
+class Pot_parallel(object):
+    def __init__(self, S, T, r_s):
+        self.S = S
+        self.T = T
+        self.r_s = r_s
+
+
+    def compute_scf_pot(self, pos):
+        """
+        TODO: Parallelize this function here!
+        """
+        G_gadget = 43007.1
+        LMC_potential = gp.potential(self.S, self.T, M=1, r_s=self.r_s, G=G_gadget)
+        potential = LMC_potential(np.ascontiguousarray(pos).astype(float))
+        return potential
+
+    def __call__(self, task):
+        return self.compute_scf_pot(task)
+
+
+
+
+def compute_scf_pot(pos, S, T, rs):
     """
     TODO: Parallelize this function here!
     """
     G_gadget = 43007.1
-    S, T = STnlm_discrete(np.ascontiguousarray(pos).astype(float),
-                                        mass, nmax, lmax, rs)
-
     LMC_potential = gp.potential(S, T, M=1, r_s=rs, G=G_gadget)
     potential = LMC_potential(np.ascontiguousarray(pos).astype(float))
     return potential
@@ -75,45 +81,6 @@ def find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax):
         ids_unbound = np.hstack((ids_unbound, ids_unb))
     return pos_bound, vel_bound, N_bound, ids_bound, pos_unbound, vel_unbound, ids_unbound
 
-
-if __name__ == "__main__":
-
-   
-    snapname = sys.argv[1]
-    out_name = sys.argv[2]
-    nmax = int(sys.argv[3])
-    lmax = int(sys.argv[4])
-    rs = float(sys.argv[5])
-
-    
-    pos, vel, mass, ids = reading_particles(snapname)
-    print('Snapshot loaded')
-    print(pos[0])
-    print(vel[0])
-    print(mass[0])
-    armadillo = find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax)
-    print('Bound particles computed')
-
-    pos_bound = armadillo[0]
-    vel_bound = armadillo[1]
-    N_bound =  armadillo[2]
-    ids_bound =  armadillo[3]
-    pos_unbound = armadillo[4]
-    vel_unbound = armadillo[5]
-    ids_unbound = armadillo[6]
-    
-    lmc_bound = np.array([pos_bound[:,0], pos_bound[:,1], pos_bound[:,2], 
-                          vel_bound[:,0], vel_bound[:,1], vel_bound[:,2],
-                          ids_bound]).T
-    
-    lmc_unbound = np.array([pos_unbound[:,0], pos_unbound[:,1], pos_unbound[:,2], 
-                            vel_unbound[:,0], vel_unbound[:,1], vel_unbound[:,2],
-                            ids_unbound]).T
-    
-    np.savetxt(out_name, lmc_bound)
-    print('Done writing snapshot with satellite bounded particles')
-    np.savetxt("unbound"+out_name, lmc_unbound)
-    print('Done writing snapshot with satellite unbounded particles')
 
 
 
