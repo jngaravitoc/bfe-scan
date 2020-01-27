@@ -135,6 +135,16 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='MW', galaxy='MW'):
     print(pos_cm, vel_cm)
     pos_new = com.re_center(pos, pos_cm)
     vel_new = com.re_center(vel, vel_cm)
+    del pos
+    del vel
+    del all_pos
+    del all_vel
+    del all_pot
+    del all_mass
+    del all_ids
+    del pos_disk
+    del vel_disk
+    del pot_disk
     return pos_new, vel_new, pot, mass, ids
     
 

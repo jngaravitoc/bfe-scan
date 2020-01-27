@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3.8
 """
 Pipeline to generate ascii files of the MW particles, LMC bound particles and
 MW+LMC unbound particles
@@ -64,6 +64,7 @@ import reading_snapshots as reads
 import coeff_parallel as cop
 import allvars
 from argparse import ArgumentParser
+from quick_viz_check import scatter_plot
 
 class BFECoeff:
     def __init__(self, pos, mass):
@@ -115,12 +116,12 @@ if __name__ == "__main__":
 
     parser = ArgumentParser(description="Parameters file for bfe-py")
 
-    parser.add_argument("--param", dest="paramFile", default=False,
+    parser.add_argument("--param", dest="paramFile", default="config.yaml",
                        type=str, help="provide parameter file")
 
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("--ncores", dest="n_cores", default=1,
+    group.add_argument("--ncores", dest="n_cores", default=16,
                        type=int, help="Number of processes (uses multiprocessing).")
     group.add_argument("--mpi", dest="mpi", default=False,
                        action="store_true", help="Run with MPI.")
@@ -156,6 +157,7 @@ if __name__ == "__main__":
         if rcut_halo>0:
             print("Truncating halo particles at {} kpc".format(rcut_halo))
             pos_halo_tr, vel_halo_tr, mass_tr, ids_tr = g2a.truncate_halo(halo[0], halo[1], halo[3], halo[4], rcut_halo)
+            del halo
         else : 
             pos_halo_tr = halo[0]
             vel_halo_tr = halo[1]
@@ -170,6 +172,8 @@ if __name__ == "__main__":
             satellite = reads.read_snap_coordinates(in_path, snapname+"_{:03d}".format(i), n_halo_part, com_frame='sat', galaxy='sat')
             pos_sat_tr, vel_sat_tr, mass_sat_tr, ids_sat_tr = g2a.truncate_halo(satellite[0], satellite[1], satellite[3], satellite[4], rcut_halo)
             pos_sat_em, vel_sat_em, mass_sat_em, ids_sat_em = g2a.npart_satellite(pos_sat_tr, vel_sat_tr, ids_sat_tr, mass_sat_tr[0], mass_tr[0])
+        print(len(pos_halo_tr))
+        scatter_plot(outpath+snapname+"_{:03d}".format(i), pos_halo_tr)
         """
         assert np.abs(mass_sat_em[0]/mass_tr[0]-1)<1E-3, 'Error: particle mass of satellite different to particle mass of the halo'
         
@@ -218,11 +222,6 @@ if __name__ == "__main__":
         mw_lmc_unbound = np.array([pos_host_sat[:,0], pos_host_sat[:,1], pos_host_sat[:,2], 
                                    vel_host_sat[:,0], vel_host_sat[:,1], vel_host_sat[:,2],
                                    mass_array]).T
-	## TODO: include out_path
-        np.savetxt(args.out_name, lmc_bound)
-        print('Done writing snapshot with satellite bounded particles')
-        np.savetxt("unbound"+args.out_name, mw_lmc_unbound)
-        print('Done writing snapshot with satellite unbounded particles')
 
         ## Run bfe here! 
         ## TODO: quick test run BFE with lmax=0 and nmax=20 to check that the first term is the largest
@@ -230,19 +229,18 @@ if __name__ == "__main__":
 
         # TODO: Change this parmetetrs file to the ones read from  config.yaml
         #armadillo = lmcb.find_bound_particles(pos_sat_em, vel_sat_em, mass_sat_em, ids_sat_em, 10, 20, 20)
-
+        
         pool = schwimmbad.choose_pool(mpi=args.mpi,
                                       processes=args.n_cores)
         pos = np.copy(pos_halo_tr)
         mass = np.copy(mass_tr)
-
+        print(mass[0])
         halo_coeff = BFECoeff(pos, mass)
         results = halo_coeff.main(pool, nmax, lmax, rs, var=True)
+        results_r = np.array(results)
         #pos = pos_halo_tr
         #mass = mass_tr
         #results = main(pool, nmax, lmax, rs, var=True)
-        print(np.shape(results))
-        results_r = np.array(results)
         print('Done computing coefficients')
         Snlm=results_r[:,0]
         Tnlm=results_r[:,1]
@@ -250,9 +248,9 @@ if __name__ == "__main__":
         varTnlm=results_r[:,3]
         varSTnlm=results_r[:,4]
 
-        halo_pot = BFEPot(Snlm, Tnlm, rs)
-        results_pot = halo_pot.main(pool, pos)
+        #halo_pot = BFEPot(Snlm, Tnlm, rs)
+        #results_pot = halo_pot.main(pool, pos)
 
-        #cop.write_coefficients(out_name+"snap_{:0>3d}.txt".format(i), Snlm, varSnlm, Tnlm,  varTnlm, varSTnlm, nmax, lmax, rs)
+        cop.write_coefficients(outpath+out_name+"snap_{:0>3d}.txt".format(i), Snlm, varSnlm, Tnlm,  varTnlm, varSTnlm, nmax, lmax, rs, mass[0])
         #print('Done writing coefficients')
         

@@ -88,7 +88,7 @@ def coeff_matrix(STnlm):
     else:
         return Snlm_matrix, Tnlm_matrix
 
-def write_coefficients(filename, Snlm, varSnlm, Tnlm, varTnlm, varSTnlm, nmax, lmax, r_s):
+def write_coefficients(filename, Snlm, varSnlm, Tnlm, varTnlm, varSTnlm, nmax, lmax, r_s, mass):
     """
     
     """
@@ -96,7 +96,7 @@ def write_coefficients(filename, Snlm, varSnlm, Tnlm, varTnlm, varSTnlm, nmax, l
 
     data = np.array([Snlm.flatten(), varSnlm.flatten(), Tnlm.flatten(),
                          varTnlm.flatten(), varSTnlm.flatten()]).T
-    header = 'nmax: {:d}, lmax: {:d}, r_s: {:3.2f}'.format(nmax, lmax, r_s)
+    header = 'nmax: {:d}, lmax: {:d}, r_s: {:3.2f}, mass: {:10.3e}'.format(nmax, lmax, r_s, mass)
     np.savetxt(filename, data, header=header)
 
     
@@ -105,8 +105,8 @@ def compute_coeff_parallel(pos, nmax, lmax, r_s, ncores):
     """
 
     """
-    #pool = schwimmbad.choose_pool(mpi=False, processes=ncores)
-    pool = schwimmbad.choose_pool(mpi=True, processes=ncores)
+    pool = schwimmbad.choose_pool(mpi=False, processes=ncores)
+    #pool = schwimmbad.choose_pool(mpi=True, processes=ncores)
     results = main(pool, pos, mass, nmax, lmax, r_s)
     Snlm, Tnlm = coeff_matrix(results)
     return Snlm, Tnlm
