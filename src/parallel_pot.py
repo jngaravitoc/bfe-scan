@@ -1,13 +1,11 @@
+#!/usr/bin/env python3.8
 import numpy as np
 import schwimmbad
 import sys
 from scipy import special
 import math
 import time 
-sys.path.append('../../MW-LMC-SCF/code')
-import mwlmc_bfe
-from coefficients_smoothing import read_coeff_matrix
-
+import coefficients_smoothing 
 class PBFEpot:
     def __init__(self, pos, S, T, rs, nmax, lmax, G, M):
         self.pos = pos
@@ -66,14 +64,14 @@ if __name__ == "__main__":
     print("Start")
     t1 = time.time()
     npoints = int(sys.argv[1])
-    coeff = np.loadtxt('../../time-dependent-BFE/data/BFE MWLMC5_b1snap_100.txt')
+    coeff = np.loadtxt('/rsgrps/gbeslastudents/nicolas/MWLMC_sims/BFE/MW/MWLMC5/BFE_MWLMC5_b1snap_061.txt')
     S = coeff[:,0]
     T = coeff[:,2]
-    Smatrix = mwlmc_bfe.coefficients_smoothing.reshape_matrix(S, 20, 20, 20)
-    Tmatrix = mwlmc_bfe.coefficients_smoothing.reshape_matrix(T, 20, 20, 20)
+    Smatrix = coefficients_smoothing.reshape_matrix(S, 20, 20, 20)
+    Tmatrix = coefficients_smoothing.reshape_matrix(T, 20, 20, 20)
     pos = np.random.randint(-100, 100, (npoints, 3))
     halo = PBFEpot(pos, S, T, 40.85, 21, 21, 1, 1)
-    pool = schwimmbad.choose_pool(mpi=False, processes=4)# start 4 worker processes
+    pool = schwimmbad.choose_pool(mpi=False, processes=16)# start 4 worker processes
     r = halo.main(pool)
     r_arr = np.array(r)
     r_all = np.sum(r_arr, axis=0)
