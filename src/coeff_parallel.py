@@ -21,8 +21,21 @@ class Coeff_parallel(object):
         self.phi = np.arctan2(np.ascontiguousarray(self.pos[:,1]), np.ascontiguousarray(self.pos[:,0])).astype("float64")
         self.X = np.ascontiguousarray(self.pos[:,2] / self.r).astype("float64")
 
-    def compute_coeffs_discrete_parallel(self, n, l, m):
+    def nlm_list(self, nmax, lmax):
+        """
         
+        """
+        nlm = []
+        for n in range(nmax+1):
+            for l in range(lmax+1):
+                for m in range(l+1):
+                    nlm.append((n,l,m))                 
+        return nlm
+                                                                                            
+
+
+    def compute_coeffs_discrete_parallel(self, task):
+        n, l, m = task
         S, T = STnlm_discrete(self.s, self.phi, self.X, self.mass, n, l, m)
 
         if self.var == True:
@@ -31,33 +44,15 @@ class Coeff_parallel(object):
         else:
             return S, T
 
-    def __call__(self, task):
-        n, l, m = task 
-        return self.compute_coeffs_discrete_parallel(n, l, m)
+    def main(self, pool):
+        tasks = self.nlm_list(self.nmax, self.lmax)
+ 
+        results = pool.map(self.compute_coeffs_discrete_parallel, tasks)
+        pool.close()
+
+        return np.array(results)
 
 
-def nlm_list(nmax, lmax):
-    """
-
-    """
-    nlm = []
-    for n in range(nmax+1):
-        for l in range(lmax+1):
-            for m in range(l+1):
-                nlm.append((n,l,m))                 
-    return nlm
-                                                                                            
-
-def main(pool, pos, mass, nmax, lmax, r_s, var=True):
-    worker = Coeff_parallel(pos, mass, r_s, var)
-
-    tasks = nlm_list(nmax, lmax)
-    
-    results = pool.map(worker, tasks)
-        
-    pool.close()
-
-    return results
 
 def coeff_matrix(STnlm):
     Snlm_matrix = np.zeros((nmax+1, lmax+1, lmax+1))
