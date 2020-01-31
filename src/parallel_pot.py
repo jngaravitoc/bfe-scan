@@ -1,4 +1,11 @@
 #!/usr/bin/env python3.8
+"""
+Script that computes parallel potential using the BFE formalism as outlined
+in Ben Lowing et al+11 equation 14 (MNRAS 416, 2697-2711).
+
+
+"""
+
 import numpy as np
 import schwimmbad
 import sys
@@ -8,6 +15,35 @@ import time
 import coefficients_smoothing 
 class PBFEpot:
     def __init__(self, pos, S, T, rs, nmax, lmax, G, M):
+        """
+        Computes parallel BFE potential
+        Attributes:
+            nlm_list     Creates arrays of indices n, l, m from 3d to 1d.
+            bfe_pot      Core function that computed the BFE potential.
+            potential    Computes the potential bfe_pot by receiving a task
+                         with the arguments that are going to run in parallel.
+            main         Runs potential in parallel using a pool to be defined
+                         by the user.
+        
+        Parameters:
+        -----------
+        pos : numpy.ndarray with shape 
+        S : numpy.ndarray
+        T : numpy.ndarray 
+        rs : float
+            Hernquist halo scale length
+        nmax : int 
+            nmax in the expansion
+        lmax : int 
+            lmax in the expansion 
+        G : float
+            Value of the gravitational constant 
+        M : float
+            Total mass of the halo (M=1) if the masses
+            of each particle where already used for computing the
+            coefficients.
+
+        """
         self.pos = pos
         self.rs = rs
         self.nmax = nmax
@@ -57,7 +93,7 @@ class PBFEpot:
         tasks = list(zip(self.S, self.T, nlist, llist, mlist))
         results = pool.map(self.potential, tasks)
         pool.close()
-        return results
+        return np.array(results)
 
 
 if __name__ == "__main__":

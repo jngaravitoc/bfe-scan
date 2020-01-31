@@ -216,9 +216,9 @@ def smooth_coeff_matrix(S, T, SS, TT, ST, mass, nmax, lmax, mmax, sn):
 """
 def smoothing_biased(cov_matrix, coeff, m, sn):
     """
-    Coefficients smoothing 
+    #Coefficients smoothing 
     
-    """
+"""
     var_coeff = ((cov_matrix - m*coeff**2))
     b_nlm = 1/(1 + var_coeff/coeff**2)
     #if coeff == 0:

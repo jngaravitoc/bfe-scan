@@ -79,20 +79,6 @@ class BFECoeff:
         return results
 
 
-class BFEPot:
-    def __init__(self, S, T, r_s):
-        self.S = S
-        self.T = T
-        self.r_s = r_s 
-
-    def main(self, pool, pos):
-        worker = lmcb.Pot_parallel(self.S, self.T, self.r_s)
-        tasks = list(zip(pos)) # for the particles?
-        results = pool.map(worker, tasks)
-        pool.close()
-        return results
-
-
 #def main(pool, nmax, lmax, r_s, var=True):
 #    worker = cop.Coeff_parallel(pos, mass, r_s, var)
 #    tasks = cop.nlm_list(nmax, lmax)
