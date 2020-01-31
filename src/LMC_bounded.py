@@ -4,47 +4,29 @@ galaxy.
 
 author: Nicolás Garavito-Camargo
 
-usage: python LMC_bounded.py filename nmax lmax rs
 
 """
 
 
 import numpy as np
 import schwimmbad
-import gala.potential as gp
 import coeff_parallel as cop
+import parallel_pot 
 
 
-class Pot_parallel(object):
-    def __init__(self, S, T, r_s):
-        self.S = S
-        self.T = T
-        self.r_s = r_s
-
-
-    def compute_scf_pot(self, pos):
-        """
-        TODO: Parallelize this function here!
-        """
-        G_gadget = 43007.1
-        LMC_potential = gp.potential(self.S, self.T, M=1, r_s=self.r_s, G=G_gadget)
-        potential = LMC_potential(np.ascontiguousarray(pos).astype(float))
-        return potential
-
-    def __call__(self, task):
-        return self.compute_scf_pot(task)
-
-
-
-
-def compute_scf_pot(pos, S, T, rs):
+def compute_scf_pot(pos, rs, nmax, lmax, ncores):
     """
     TODO: Parallelize this function here!
     """
-    G_gadget = 43007.1
-    LMC_potential = gp.potential(S, T, M=1, r_s=rs, G=G_gadget)
-    potential = LMC_potential(np.ascontiguousarray(pos).astype(float))
-    return potential
+    # Compute coefficients
+    # Compute potential
+    #_gadget = 43007.1
+    
+    halo = parallel_pot.PBFEpot(pos, S, T, rs, nmax, lmax, G=43007.1, M)
+    pool = schwimmbad.choose_pool(mpi=False, processes=ncores)
+    pot = halo.main(pool)
+    pot_all = np.sum(pot, axis=0)
+    return pot_all
 
 
 def bound_particles(pot, pos, vel, ids):
