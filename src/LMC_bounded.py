@@ -4,7 +4,6 @@ galaxy.
 
 author: Nicolás Garavito-Camargo
 
-
 """
 
 
@@ -14,17 +13,21 @@ import coeff_parallel as cop
 import parallel_pot 
 
 
-def compute_scf_pot(pos, rs, nmax, lmax, ncores):
+def compute_scf_pot(pos, rs, nmax, lmax, mass, ncores):
     """
     TODO: Parallelize this function here!
     """
     # Compute coefficients
     # Compute potential
     #_gadget = 43007.1
-    
-    halo = parallel_pot.PBFEpot(pos, S, T, rs, nmax, lmax, G=43007.1, M)
+     
     pool = schwimmbad.choose_pool(mpi=False, processes=ncores)
-    pot = halo.main(pool)
+    halo_coeff = cop.Coeff_parallel(pos, mass, rs, False, nmax, lmax)
+    results = halo_coeff.main(pool)
+    S = results[:,0]
+    T = results[:,1]
+    halo_pot = parallel_pot.PBFEpot(pos, S, T, rs, nmax, lmax, G=43007.1, M=1)
+    pot = halo_pot.main(pool)
     pot_all = np.sum(pot, axis=0)
     return pot_all
 
@@ -59,9 +62,9 @@ def find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax):
         print(N_init, N_bound)
         print('Number of bound particles in iteration {}: {}'.format(i, N_bound))
         pos_unbound = np.vstack((pos_unbound, p_unb))
-        vel_unbound = np.vstack((vel_unbound, v_unb))
+        #vel_unbound = np.vstack((vel_unbound, v_unb))
         ids_unbound = np.hstack((ids_unbound, ids_unb))
-    return pos_bound, vel_bound, N_bound, ids_bound, pos_unbound, vel_unbound, ids_unbound
+    return pos_bound, N_bound, ids_bound, pos_unbound, ids_unbound
 
 
 
