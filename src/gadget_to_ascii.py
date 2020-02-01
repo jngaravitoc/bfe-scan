@@ -1,21 +1,14 @@
 """
 Code to write ascii snapshots from Gadget binary 2 format.
 
-to-do:
+TODO:
 ======
 
-- Use bound particles of the host to compute the expansion?
 
 """
 
 import numpy as np
 import com
-import sys
-
-sys.path.append("../")
-import reading_snapshots as rs
-
-
 
 def truncate_halo(pos, vel, mass, ids, rcut):
     r_halo = (pos[:,0]**2 + pos[:,1]**2 + pos[:,2]**2)**0.5
@@ -78,60 +71,8 @@ def write_log(halo, sat):
     print('*********************************************')
 
     return 0
-
-
-if __name__ == "__main__":
-    path = "../../../MW_anisotropy/code/test_snaps/"
-    #path = '/media/ngaravito/4fb4fd3d-1665-4892-a18d-bdbb1185a07b/mwlmc_raw/'
-    #out_path_MW = '/media/ngaravito/4fb4fd3d-1665-4892-a18d-bdbb1185a07b/mwlmc_ascii/MW/'
-    #out_path_LMC = '/media/ngaravito/4fb4fd3d-1665-4892-a18d-bdbb1185a07b/mwlmc_ascii/LMC/'
-    out_path_MW = './'
-    out_path_LMC = './'
     
-    snap_names = ["MWLMC3_100M_new_b0_090", "MWLMC3_100M_new_b1_091",  
-                  "MWLMC4_100M_new_b0_114", "MWLMC4_100M_new_b1_115",  
-                  "MWLMC5_100M_new_b1_110", "MWLMC5_100M_new_b0_109",  
-                  "MWLMC6_100M_new_b0_2_113", "MWLMC6_100M_new_b1_2_114"]
-
-
-
-    n_halo_part = 100000000
-    n_part_sample = 100000000
-    #n_part_sample_sat = 1000000
-    rcut_halo = 400
-    sample = 0
-    sample_lmc = 0
-    #for i in range(0, len(snap_names)):
-    for i in range(1, 8):
-        halo = rs.read_snap_coordinates(path, snap_names[i], n_halo_part, com_frame='MW', galaxy='MW')
-        # read_snap_coordinates returns pos, vel, pot, mass
-        pos_halo_tr, vel_halo_tr, mass_tr, ids_tr = truncate_halo(halo[0], halo[1], halo[3], halo[4], rcut_halo)
-
-        #satellite = rs.read_snap_coordinates(path, snap_names[i], n_halo_part, com_frame='sat', galaxy='sat')
-        
-        print("**************************")
-        print(snap_names[i])
-        #print(pos_cm, vel_cm)
-        print("**************************")
-
-        #pos_sat_tr, vel_sat_tr, mass_sat_tr, ids_sat_tr = truncate_halo(satellite[0], satellite[1], satellite[3], satellite[4], rcut_halo)
-        
-        #f sample == 1:
-        #   pos_sample, vel_sample, mass_sample = sample_halo(pos_halo_tr, vel_halo_tr, halo[3][0], n_halo_part, n_part_sample)
-        #lif sample == 0:
-        #   mass_sample = mass_tr 
-        #   pos_sample = pos_halo_tr
-        #   vel_sample = vel_halo_tr
-
-        pos_sat_em, vel_sat_em, mass_sat_em, ids_sat_em = npart_satellite(pos_sat_tr, vel_sat_tr, ids_sat_tr, mass_sat_tr[0], mass_tr[0])	
-   
-        # Outs: 
-        #out_snap_host = 'MW_{}_{}'.format(int(len(pos_halo_tr)/1E6), snap_names[i])
-        out_snap_sat= 'LMC_{}_{}'.format(int(len(pos_sat_em)/1E6), snap_names[i])
-        #out_snap_sat= 'LMC_{}_{}'.format(int(len(satellite[0])/1E6), snap_names[i])
-
-        #write_log([n_halo_part, halo[3][0], len(pos_sample), mass_sample], [len(pos_sat_tr[0]), satellite[3][0], len(pos_sat_em), mass_sat_em])
-        #write_snap_txt(out_path_MW, out_snap_host, pos_halo_tr, vel_halo_tr, mass_tr, ids_tr)
-        write_snap_txt(out_path_LMC, out_snap_sat, pos_sat_em, vel_sat_em, mass_sat_em, ids_sat_em)
-        #write_snap_txt(out_path_LMC, out_snap_sat, satellite[0], satellite[1], satellite[3], satellite[4])
-        
+#snap_names = ["MWLMC3_100M_new_b0_090", "MWLMC3_100M_new_b1_091",  
+#                  "MWLMC4_100M_new_b0_114", "MWLMC4_100M_new_b1_115",  
+#                  "MWLMC5_100M_new_b1_110", "MWLMC5_100M_new_b0_109",  
+#                  "MWLMC6_100M_new_b0_2_113", "MWLMC6_100M_new_b1_2_114"] 
