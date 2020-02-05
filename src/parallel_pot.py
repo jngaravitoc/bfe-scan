@@ -12,7 +12,8 @@ import sys
 from scipy import special
 import math
 import time 
-import coefficients_smoothing 
+import coefficients_smoothing
+
 class PBFEpot:
     def __init__(self, pos, S, T, rs, nmax, lmax, G, M):
         """

@@ -29,7 +29,7 @@ def readparams(paramfile):
     write_snaps_ascii = d["WriteSnapsAscii"]
     out_ids_bound_unbound_sat = d["OutIdsBoundUnbound"]
     plot_scatter_sample = d["PlotScatterSample"]
-
+    samplePartSat = d["samplePartSat"]
 
     assert type(inpath)==str, "inpath parameter  must be a string"
     assert type(snapname)==str, "snapname parameter must be a string"
@@ -52,5 +52,5 @@ def readparams(paramfile):
             lmax, rs, ncores, mpi, rhaloCut, initSnap, finalSnap, SatBFE,
             sat_rs, nmax_sat, lmax_sat, HostBFE, SatBoundParticles,
             HostSatUnboundPart, write_snaps_ascii, out_ids_bound_unbound_sat, 
-            plot_scatter_sample]
+            plot_scatter_sample, samplePartSat]
 

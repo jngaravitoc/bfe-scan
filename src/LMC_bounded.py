@@ -26,8 +26,10 @@ def compute_scf_pot(pos, rs, nmax, lmax, mass, ncores):
     results = halo_coeff.main(pool)
     S = results[:,0]
     T = results[:,1]
+    print("S shape", np.shape(S))
     halo_pot = parallel_pot.PBFEpot(pos, S, T, rs, nmax, lmax, G=43007.1, M=1)
-    pot = halo_pot.main(pool)
+    pool2 = schwimmbad.choose_pool(mpi=False, processes=ncores)
+    pot = halo_pot.main(pool2)
     pot_all = np.sum(pot, axis=0)
     return pot_all
 
@@ -44,9 +46,9 @@ def bound_particles(pot, pos, vel, ids):
     return pos[lmc_bound], vel[lmc_bound], ids[lmc_bound], pos[lmc_unbound], vel[lmc_unbound], ids[lmc_unbound]
 
 
-def find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax):
+def find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax, ncores):
     N_init = len(pos)
-    pot = compute_scf_pot(pos, rs, nmax, lmax, mass)
+    pot = compute_scf_pot(pos, rs, nmax, lmax, mass, ncores)
     pos_bound, vel_bound, ids_bound, pos_unbound, vel_unbound, ids_unbound = bound_particles(pot, pos, vel, ids)
     N_bound = len(pos_bound)
 
@@ -54,7 +56,7 @@ def find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax):
     print('Initial number of particles:', N_init)
     i=0
     while (np.abs(N_init-N_bound) > (0.01*N_init)):
-        pot = compute_scf_pot(pos_bound, rs, nmax, lmax, mass)
+        pot = compute_scf_pot(pos_bound, rs, nmax, lmax, mass, ncores)
         pos_bound, vel_bound, ids_bound, p_unb, v_unb, ids_unb = bound_particles(pot, pos_bound, vel_bound, ids_bound)   
         N_init = N_bound
         N_bound = len(pos_bound)
@@ -62,9 +64,9 @@ def find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax):
         print(N_init, N_bound)
         print('Number of bound particles in iteration {}: {}'.format(i, N_bound))
         pos_unbound = np.vstack((pos_unbound, p_unb))
-        #vel_unbound = np.vstack((vel_unbound, v_unb))
+        vel_unbound = np.vstack((vel_unbound, v_unb))
         ids_unbound = np.hstack((ids_unbound, ids_unb))
-    return pos_bound, N_bound, ids_bound, pos_unbound, ids_unbound
+    return pos_bound, N_bound, ids_bound, pos_unbound, vel_unbound, ids_unbound
 
 
 

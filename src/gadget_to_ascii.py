@@ -15,8 +15,14 @@ def truncate_halo(pos, vel, mass, ids, rcut):
     rcut_index = np.where(r_halo<rcut)[0]
     return pos[rcut_index], vel[rcut_index], mass[rcut_index], ids[rcut_index]
 
-def sample_halo(pos, vel, mass, npart_sample):
-    
+def sample_halo(pos, vel, mass, npart_sample, ids):
+    """
+    Function that samples randomly a halo!
+    it also corrects the mass of the new particle as follows:
+        new particle mass = (old particle mass) * (N particles) / (N sample particle)
+
+    return pos, vel, mass, ids
+    """
     n_halo_part = len(pos)
     N_random = np.random.randint(0, n_halo_part, npart_sample)
     	
@@ -24,7 +30,7 @@ def sample_halo(pos, vel, mass, npart_sample):
     part_mass = mass*mass_fraction
     print('Particle mass factor', mass_fraction)
     print('New particle mass', part_mass)
-    return pos[N_random], vel[N_random], part_mass
+    return pos[N_random], vel[N_random], part_mass[N_random], ids[N_random]
 
 def npart_satellite(pos_sat, vel_sat, ids_sat, pmass_sat, pmass_host):
     """
