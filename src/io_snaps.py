@@ -119,7 +119,7 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='MW', galaxy='MW'):
             print(pos_cm, vel_cm)
             pos_cm += com1[0]
 
-    elif com_frame=='LSR':
+    elif com_frame == 'LSR' :
         print('Computing coordinates in the LSR frame')
         pos_disk = readsnap(path+snap, 'pos', 'disk')
         vel_disk = readsnap(path+snap, 'vel', 'disk')
@@ -142,9 +142,10 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='MW', galaxy='MW'):
     del all_pot
     del all_mass
     del all_ids
-    del pos_disk
-    del vel_disk
-    del pot_disk
+    if ((com_frame == 'MW') | (com_frame == 'LSR')):
+        del pos_disk
+        del vel_disk
+        del pot_disk
     return pos_new, vel_new, pot, mass, ids
     
 

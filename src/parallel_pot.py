@@ -57,6 +57,7 @@ class PBFEpot:
         self.M = M
         self.S = S
         self.T = T
+        self.nparticles = len(self.s)
         
     def nlm_list(self, ncoeff, nmax, lmax):
         n_list = np.zeros(ncoeff)
@@ -72,29 +73,32 @@ class PBFEpot:
                     i+=1
         return n_list, l_list, m_list
 
-    def bfe_pot(self, n, l, m):
+    def bfe_pot(self, n, l, m, s, theta):
         #r, theta, phi = spherical_coordinates(pos)
-
-        phi_l = -self.s**l * (1+self.s)**(-2*l-1)
+    
+        phi_l = -s**l * (1+s)**(-2*l-1)
         #phi_nlm = special.eval_gegenbauer(n, 2*l+1.5, (s-1)/(s+1)) * special.sph_harm(m, l, 0, theta)
-        phi_nlm = special.eval_gegenbauer(n, 2*l+1.5, (self.s-1)/(self.s+1)) * special.lpmv(m, l, np.cos(self.theta))
+        phi_nlm = special.eval_gegenbauer(n, 2*l+1.5, (s-1)/(s+1)) * special.lpmv(m, l, np.cos(theta))
         factor = ((2*l+1) * math.factorial(l-m)/math.factorial(l+m))**0.5
         #factor = 1#(4*np.pi)**0.5
         return  factor*phi_l*phi_nlm 
 
     
     def potential(self, task):
-        S, T, n, l, m = task
-        pot = self.bfe_pot(n, l, m)*(S*np.cos(m*self.phi)+T*np.sin(m*self.phi))
+        #s, phi, theta = task
+        #nlist, llist, mlist = self.nlm_list(len(self.S), self.nmax, self.lmax)
+        nlist, llist, mlist, S, T = task
+        #pot = np.zeros(len(nlist))
+        #for i in range(len(self.S)):
+        pot = self.bfe_pot(nlist, llist, mlist, self.s, self.theta)*(S*np.cos(mlist*self.phi)+T*np.sin(mlist*self.phi))
         return pot*self.G*self.M/self.rs
     
     def main(self, pool):
-        # Here we generate some fake data
         nlist, llist, mlist = self.nlm_list(len(self.S), self.nmax, self.lmax)
-        tasks = list(zip(self.S, self.T, nlist, llist, mlist))
+        tasks = list(zip(nlist, llist, mlist, self.S, self.T))
         results = pool.map(self.potential, tasks)
         pool.close()
-        return np.array(results)
+        return np.sum(results, axis=0)
 
 
 if __name__ == "__main__":

@@ -148,6 +148,7 @@ if __name__ == "__main__":
                     
             # Truncating satellite for BFE computation
             if ((SatBFE == 1) | (HostSatUnboundBFE==1)):
+                # TODO : return BFE of the bound particles the LMC
                 satellite = ios.read_snap_coordinates(in_path, snapname+"_{:03d}".format(i), n_halo_part, com_frame='sat', galaxy='sat')
                 pos_sat_tr, vel_sat_tr, mass_sat_tr, ids_sat_tr = g2a.truncate_halo(satellite[0], satellite[1], satellite[3], satellite[4], rcut_halo)
                 # TODO : what if we are computing the BFE just for the satellite
@@ -178,7 +179,11 @@ if __name__ == "__main__":
                 out_log.write("Computing satellite bound particles!\n")
                 armadillo = lmcb.find_bound_particles(pos_sat_em, vel_sat_em, 
                                                       mass_sat_em, ids_sat_em, 
-                                                      sat_rs, nmax_sat, lmax_sat, ncores)
+                                                      sat_rs, nmax_sat,
+                                                      lmax_sat, ncores,
+                                                      npart_sample = 100000)
+                # npart_sample sets the number of particles to compute the
+                # potential
                 out_log.write('Done: Computing satellite bound particles!')
                 pos_bound = armadillo[0]
                 N_part_bound = armadillo[1]
@@ -226,12 +231,12 @@ if __name__ == "__main__":
                 out_log.write("Computing Sat BFE \n")
                 mass_array = np.ones(len(ids_bound))*mass_sat_em[0]
                 sat_coeff = cop.Coeff_parallel(pos_bound, mass_array, sat_rs, True, \
-                                               sat_nmax, sat_lmax)
+                                               nmax_sat, lmax_sat)
                 results_BFE_sat = sat_coeff.main(pool)
                 out_log.write("Done computing Sat BFE \n")
     
                 ios.write_coefficients(outpath+out_name+"Sat_snap_{:0>3d}.txt".format(i),\
-                                       results_BFE_sat, nmax, lmax, rs, mass_array[0])
+                                       results_BFE_sat, nmax_sat, lmax_sat, rs, mass_array[0])
         
             
     
