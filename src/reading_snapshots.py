@@ -21,7 +21,7 @@ def host_particles(xyz, vxyz, pids, pot, mass, N_host_particles):
 
     """
     sort_indexes = np.sort(pids)
-    N_cut = sort_indexes[N_host_particles]
+    N_cut = sort_indexes[N_host_particles-1]
     host_ids = np.where(pids<N_cut)[0]
     return xyz[host_ids], vxyz[host_ids], pids[host_ids], pot[host_ids], mass[host_ids]
 

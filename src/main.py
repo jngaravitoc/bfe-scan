@@ -176,6 +176,7 @@ if __name__ == "__main__":
             # *************************  Compute BFE: ***************************** 
     
             if ((SatBFE==1) & (SatBoundParticles ==1)):
+                print("Satellite total mass", np.sum(mass_sat_em))
                 out_log.write("Computing satellite bound particles!\n")
                 armadillo = lmcb.find_bound_particles(pos_sat_em, vel_sat_em, 
                                                       mass_sat_em, ids_sat_em, 
@@ -184,20 +185,23 @@ if __name__ == "__main__":
                                                       npart_sample = 100000)
                 # npart_sample sets the number of particles to compute the
                 # potential
+                del(pos_sat_em)
+                del(vel_sat_em)
                 out_log.write('Done: Computing satellite bound particles!')
                 pos_bound = armadillo[0]
-                N_part_bound = armadillo[1]
+                vel_bound = armadillo[1]
+                #N_part_bound = armadillo[6]
+                pot_bound = armadillo[6]
                 ids_bound = armadillo[2]
                 pos_unbound = armadillo[3]
                 vel_unbound = armadillo[4]
                 ids_unbound = armadillo[5]
-                Mass_bound = (len(ids_bound)/len(ids_sat_em))*np.sum(mass_sat_em)
-                Mass_unbound = (len(ids_unbound)/len(ids_sat_em))*np.sum(mass_sat_em)
-                Mass_fraction = len(ids_bound)/len(ids_sat_em)
-                print("Satellite bound mass fraction", Mass_fraction*100)
-                print("Satellite bound mass", Mass_bound)
-                print("Satellite total mass", np.sum(mass_sat_em))
-                print("Satellite unbound mass", Mass_unbound)
+                #Mass_bound = (len(ids_bound)/len(ids_sat_em))*np.sum(mass_sat_em)
+                #Mass_unbound = (len(ids_unbound)/len(ids_sat_em))*np.sum(mass_sat_em)
+                #Mass_fraction = (N_part_bound)/len(ids_sat_em)
+                #print("Satellite bound mass fraction", Mass_fraction)
+                #print("Satellite bound mass", Mass_bound)
+                #print("Satellite unbound mass", Mass_unbound)
           
             # Pool for parallel computation! 
             pool = schwimmbad.choose_pool(mpi=args.mpi,
@@ -210,7 +214,7 @@ if __name__ == "__main__":
                 # TODO : Check mass array?
                 mass_array = np.ones(len(ids_unbound))*mass_sat_em[0]
                 mass_Host_Debris = np.hstack((mass_tr, mass_array))
-                halo_debris_coeff = cop.Coeff_parallel(pos_host_sat, mass, rs, True, nmax, lmax)
+                halo_debris_coeff = cop.Coeff_parallel(pos_host_sat, mass_Host_Debris, rs, True, nmax, lmax)
                 results_BFE_halo_debris = halo_debris_coeff.main(pool)
                 out_log.write("Done computing Host & satellite debris potential")
                 ios.write_coefficients(outpath+out_name+"HostSatUnbound_snap_{:0>3d}.txt".format(i),\
@@ -244,27 +248,22 @@ if __name__ == "__main__":
             # Write snapshots ascii files
             if write_snaps_ascii == 1:
     
-                out_snap_host = 'MW_{}_{}'.format(int(len(pos_halo_tr)/1E6), snapname+"{}".format(i))
-                out_snap_sat= 'LMC_{}_{}'.format(int(len(pos_sat_em)/1E6), snapname+"{}".format(i))
                 # Write Host snap 
-    
-                write_snap_txt(outpath, out_snap_host, pos_halo_tr, vel_halo_tr, mass_tr, ids_tr)
-                write_snap_txt(outpath, out_snap_sat, pos_sat_em, vel_sat_em, mass_sat_em, ids_sat_em)
-                
+                if HostBFE == 1: 
+                    out_snap_host = 'MW_{}_{}'.format(int(len(pos_halo_tr)/1E6), snapname+"{}".format(i))
+                    g2a.write_snap_txt(outpath, out_snap_host, pos_halo_tr, vel_halo_tr, mass_tr, ids_tr)
                 if SatBFE == 1:
                 #write_snap_txt(out_path_LMC, out_snap_sat, satellite[0], satellite[1], satellite[3], satellite[4])
-                    lmc_bound = np.array([pos_bound[:,0], pos_bound[:,1], pos_bound[:,2],
-                                          vel_bound[:,0], vel_bound[:,1], vel_bound[:,2],
-                                          ids_bound]).T
-
-                    lmc_unbound = np.array([pos_unbound[:,0], pos_unbound[:,1], pos_unbound[:,2],
-                                            vel_unbound[:,0], vel_unbound[:,1], vel_unbound[:,2],
-                                            ids_unbound]).T
+                    out_snap_sat_bound= 'LMC_bound_{}'.format(snapname+"{}".format(i))
+                    #out_snap_sat_unbound= 'LMC_unbound_{}'.format(snapname+"{}".format(i))
+                    #mass_bound = np.ones(N_part_bound)*mass_sat_em[0]
+                    mass_unbound = np.ones(len(ids_unbound))*mass_sat_em[0]
+                    
                     # Combining satellite unbound particles with host particles
+                    #g2a.write_snap_txt(outpath, out_snap_sat_bound, pos_bound,  vel_bound, mass_bound, ids_bound)
+                    g2a.write_snap_txt(outpath, out_snap_sat_bound, pos_bound, vel_bound, pot_bound, ids_bound)
+                    
         	
-                mw_lmc_unbound = np.array([pos_host_sat[:,0], pos_host_sat[:,1], pos_host_sat[:,2], 
-                                           vel_host_sat[:,0], vel_host_sat[:,1], vel_host_sat[:,2],
-                                           mass_array]).T
 
 
     
