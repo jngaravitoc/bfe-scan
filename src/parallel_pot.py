@@ -50,8 +50,9 @@ class PBFEpot:
         self.nmax = nmax
         self.lmax = lmax
         self.r = (self.pos[:,0]**2 + self.pos[:,1]**2 + self.pos[:,2]**2)**0.5 
-        self.theta = np.arccos(self.pos[:,2]/self.r)
-        self.phi = np.arctan2(self.pos[:,1], self.pos[:,0]) + np.pi
+        self.theta = np.arccos(self.pos[:,2]/self.r) # cos(theta)
+
+        self.phi = np.arctan2(self.pos[:,1], self.pos[:,0]) 
         self.s = self.r/self.rs
         self.G = G
         self.M = M
@@ -64,8 +65,8 @@ class PBFEpot:
         l_list = np.zeros(ncoeff)
         m_list = np.zeros(ncoeff)
         i=0
-        for n in range(nmax):
-            for l in range(lmax):
+        for n in range(nmax+1):
+            for l in range(lmax+1):
                 for m in range(l+1):
                     n_list[i] = n 
                     l_list[i] = l
@@ -78,10 +79,11 @@ class PBFEpot:
     
         phi_l = -s**l * (1+s)**(-2*l-1)
         #phi_nlm = special.eval_gegenbauer(n, 2*l+1.5, (s-1)/(s+1)) * special.sph_harm(m, l, 0, theta)
-        phi_nlm = special.eval_gegenbauer(n, 2*l+1.5, (s-1)/(s+1)) * special.lpmv(m, l, np.cos(theta))
+        phi_nlm = special.eval_gegenbauer(n, 2*l+1.5, ((s-1)/(s+1))) * special.lpmv(m, l, np.cos(theta))
         factor = ((2*l+1) * math.factorial(l-m)/math.factorial(l+m))**0.5
+        #factor=1
         #factor = 1#(4*np.pi)**0.5
-        return  factor*phi_l*phi_nlm 
+        return  factor*phi_l*phi_nlm #np.sqrt(4*np.pi)
 
     
     def potential(self, task):
@@ -90,13 +92,18 @@ class PBFEpot:
         nlist, llist, mlist, S, T = task
         #pot = np.zeros(len(nlist))
         #for i in range(len(self.S)):
-        pot = self.bfe_pot(nlist, llist, mlist, self.s, self.theta)*(S*np.cos(mlist*self.phi)+T*np.sin(mlist*self.phi))
+        pot = self.bfe_pot(nlist, llist, mlist, self.s, self.theta)\
+                * (S*np.cos(mlist*self.phi)+T*np.sin(mlist*self.phi))
         return pot*self.G*self.M/self.rs
     
     def main(self, pool):
         nlist, llist, mlist = self.nlm_list(len(self.S), self.nmax, self.lmax)
+        #rint(self.S, self.T)
         tasks = list(zip(nlist, llist, mlist, self.S, self.T))
         results = pool.map(self.potential, tasks)
+        #for i in range(len(nlist)):
+        #    results = self.potential([nlist[i], llist[i], mlist[i], self.S[i], self.T[i]])
+        print(np.sum(results, axis=0))
         pool.close()
         return np.sum(results, axis=0)
 
@@ -117,6 +124,4 @@ if __name__ == "__main__":
     r_arr = np.array(r)
     r_all = np.sum(r_arr, axis=0)
     t2 = time.time()
-    print("total time = {:.3f}s".format(t2-t1))
-    print(r_all)
     print("Done")

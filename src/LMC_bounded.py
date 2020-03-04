@@ -1,6 +1,6 @@
 """
 Script to found the bound particles of a satellite
-galaxy.
+galaxy using the BFE method.
 
 author: Nicolás Garavito-Camargo
 
@@ -18,6 +18,19 @@ def parallel_potential_batches(pos, S, T, rs, nmax, lmax, G, ncores,
     """
     Function to compute potential in parallel. To avoid 
     large memory errors the particle's potential is computed in batches.
+
+    Parameters:
+    ----------
+    pos
+    S : cosine components
+    T : sine components
+    rs : halo scale length
+    nmax : maximum of n number in expansion
+    lmax : maximum l number in expansion
+    G : value of gravitational constant
+    ncores : number of cores used to compute the potential in parallel
+    npart_sample : number of particles 
+
     """
     
     Nparticles = len(pos[:,0])
@@ -25,34 +38,43 @@ def parallel_potential_batches(pos, S, T, rs, nmax, lmax, G, ncores,
     nbatches = int(Nparticles/npart_sample)
     print('computing potential in parallel in {} batches of particles'.format(nbatches))
     pot_all = np.array([])
+
     if nbatches < 1:
       pos_batch = pos
-      halo_pot = parallel_pot.PBFEpot(pos_batch, S, T, rs, nmax, lmax, G=43007.1, M=1)
+      halo_pot = parallel_pot.PBFEpot(pos_batch, S, T, rs, nmax, lmax, G=G, M=1)
+
+      # choosing pool to compute the potential in parallel
       pool2 = schwimmbad.choose_pool(mpi=False, processes=ncores)
+      # Compute potential in parallel
       pot_all = halo_pot.main(pool2)
 
     else :
         for i in range(nbatches):
+            # making batches
             if i < (nbatches-1):
                 pos_batch = pos[i*npart_sample:(i+1)*npart_sample]
             elif i == (nbatches-1):
                 pos_batch = pos[i*npart_sample:]
             else :
                 pos_batch = pos
+
             print("Done batch {}".format(i))
-            halo_pot = parallel_pot.PBFEpot(pos_batch, S, T, rs, nmax, lmax, G=43007.1, M=1)
+            halo_pot = parallel_pot.PBFEpot(pos_batch, S, T, rs, nmax, lmax, G=G, M=1)
             pool2 = schwimmbad.choose_pool(mpi=False, processes=ncores)
             pot = halo_pot.main(pool2)
             pot_all = np.hstack((pot_all, pot))
-            del(pot)
-            del(pos_batch)
+
+            # clean memory
+            del(pot, pos_batch, pool2)
+    # clean memory
+    del(pos)
 
     assert (len(pot_all)==Nparticles), 'Hey some potentials are missing here'
     return pot_all
 
 def compute_scf_pot(pos, rs, nmax, lmax, mass, ncores, npart_sample):
     """
-    TODO: Parallelize this function here!
+    
     """
     # Compute coefficients
     # Compute potential
@@ -60,16 +82,18 @@ def compute_scf_pot(pos, rs, nmax, lmax, mass, ncores, npart_sample):
 
     # Compute coefficients of bound particles
     pool = schwimmbad.choose_pool(mpi=False, processes=ncores)
-    assert len(pos)==len(mass), 'positions arrays and massed do not match'
+    assert len(pos)==len(mass), 'position array and mass array length do not match'
     halo_coeff = cop.Coeff_parallel(pos, mass, rs, False, nmax, lmax)
     results = halo_coeff.main(pool)
     S = results[:,0]
     T = results[:,1]
-     
+
+    del(results, halo_coeff, pool)
+
     # Compute potential
     pot = parallel_potential_batches(pos, S, T, rs, nmax, lmax, 
                                      43007.1, ncores, npart_sample)
-    
+    del(S,T,pos)
     print("Done computing parallel potential")
     return pot
 
@@ -84,9 +108,7 @@ def bound_particles(pot, pos, vel, ids):
 
     lmc_bound = np.where(T+V<=0)[0]
     lmc_unbound = np.where(T+V>0)[0]
-    del(T)
-    del(V)
-    del(vmag_lmc)
+    del(T, V, vmag_lmc)
 
     return pos[lmc_bound], vel[lmc_bound], ids[lmc_bound], pos[lmc_unbound], vel[lmc_unbound], ids[lmc_unbound]
 
