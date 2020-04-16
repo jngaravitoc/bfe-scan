@@ -164,7 +164,7 @@ if __name__ == "__main__":
                                     mass_tr, npart_sample, ids_tr)
 
             # Truncating satellite for BFE computation
-            if ((SatBFE == 1) | (HostSatUnboundBFE == 1)):
+            elif ((SatBFE == 1) | (HostSatUnboundBFE == 1)):
                 # TODO : return BFE of the bound particles the LMC
                 satellite = ios.read_snap_coordinates(
                         in_path, snapname+"_{:03d}".format(i),
@@ -199,7 +199,7 @@ if __name__ == "__main__":
                     mass_sat_em = mass_sat_tr
                     ids_sat_em = ids_sat_tr
             # Plot 2d projections scatter plots
-            if plot_scatter_sample == 1:
+            elif plot_scatter_sample == 1:
 
                 if ((HostBFE == 1) | (HostSatUnboundBFE == 1)):
                     scatter_plot(
@@ -214,7 +214,7 @@ if __name__ == "__main__":
                     
             # *************************  Compute BFE: ***************************** 
     
-            if ((SatBFE == 1) & (SatBoundParticles == 1)):
+            elif ((SatBFE == 1) & (SatBoundParticles == 1)):
                 print("Satellite total mass", np.sum(mass_sat_em))
                 out_log.write("Computing satellite bound particles!\n")
                 armadillo = lmcb.find_bound_particles(
@@ -254,8 +254,13 @@ if __name__ == "__main__":
                 out_log.write("Satellite unbound mass", Mass_unbound)
 
                 if plot_scatter_sample == 1:
+                    out_log.write("plotting scatter plots of unbound and bound satellite particles")
                     scatter_plot(outpath+snapname+"_unbound_sat_{:03d}".format(i), pos_unbound)
                     scatter_plot(outpath+snapname+"_bound_sat_{:03d}".format(i), pos_bound)
+                
+                elif out_ids_bound_unbound_sat == 1:
+                    out_log.write("writing satellite bound id")
+                    np.savetxt(out_path+snapname+"_bound_sat_ids_{:03d}".format(i), ids_bound)
 
             elif HostSatUnboundBFE == 1:
                 pool_host_sat = schwimmbad.choose_pool(mpi=args.mpi,
@@ -314,7 +319,7 @@ if __name__ == "__main__":
                 # Write Host snap 
                 if HostBFE == 1: 
                     out_snap_host = 'MW_{}_{}'.format(
-                            int(len(pos_halo_tr)/1E6), snapname+"{}".format(i))
+                            int(len(pos_halo_tr)/1E6), snapname+"_{}".format(i))
 
                     g2a.write_snap_txt(
                             outpath, out_snap_host, pos_halo_tr,
@@ -322,7 +327,7 @@ if __name__ == "__main__":
 
                 elif SatBFE == 1:
                     out_snap_sat_bound= 'LMC_bound_{}'.format(
-                            snapname+"{}".format(i))
+                            snapname+"_{}".format(i))
 
                     # Combining satellite unbound particles with host particles
                     g2a.write_snap_txt(
