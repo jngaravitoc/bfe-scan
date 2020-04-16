@@ -20,3 +20,6 @@ def scatter_plot(snap, data):
     plt.ylim(-200, 200)
     plt.savefig(snap+"_yz.png", bbox_inches='tight')
     plt.close()
+
+
+
