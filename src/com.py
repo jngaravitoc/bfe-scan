@@ -31,7 +31,7 @@ def re_center(vec, cm):
     new_vec = np.copy(vec)
     for i in range(len(cm)):
       new_vec[:,i] = vec[:,i] - cm[i]
-    return vec
+    return new_vec
 
 
 def host_sat_particles(pids, list_num_particles, gal_ind, *args):
