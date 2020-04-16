@@ -1,64 +1,15 @@
 #!/usr/bin/env python3.8
 """
+bfe-py 
+is a python code that computes BFE expansion in idealized n-body simulations
+it works in parallel using multiprocessing.
+
 Pipeline to generate ascii files of the MW particles, LMC bound particles and
 MW+LMC unbound particles
 
 author: github/jngaravitoc
 12/2019
 
-
-    Code Features:
-        - Compute BFE expansion from a collection of snapshots
-        - Separates a satellite from its host by finding bound
-          satellite particles.
-        - Recenter Host and Satellite to its COM
-        - Sample satellite particles to have the same mass of the host.
-        - Run in parallel for the nlm list.
-        - Write particle data in Gadget format if desired.
-
-    TODO:
-
-        Parameter file:
-            - Make different categories for Host and Satellite?
-            - Think that if this is going to be general we might need more than
-            one satellite.
-
-        Implement all optional outputs:
-            - random satellite sample *
-            - output ascii files
-            - what if the COM is provided?
-            - use ids to track bound - unbound particles -- think about cosmo
-            zooms
-            - track bound mass fraction
-            - write Gadget format file
-            - Check if all the flags are working
-            - Flag: write_snaps_ascii
-            - ids_tr is needed? or can be deleted to use less memory?
-
-        Implement checks:
-            - equal mass particles (DONE)
-            - com accuracy check
-            - plot figure with com of satellite and host for every snapshot..
-            - BFE monopole term amplitude -- compute nmax=20, lmax=0 and check
-                larger term is 000
-
-        Implement tests for every function**
-        Implement parallel computation for bound satellite particles.
-        * : fast to implement
-        ** : may need some time to implement
-
-        Parallelization:
-            - Fix results=pool() returns empty list if --ncores==1?
-
-    - known issues:
-        - currently multiprocessing return the following error when many
-        particles are used:
-        struct.error: 'i' format requires -2147483648 <= number <= 2147483647
-
-        This is a known issue of multiprocessing that apparently is solved in
-        python3.8
-        see :
-        https://stackoverflow.com/questions/47776486/python-struct-error-i-format-requires-2147483648-number-2147483647
 """
 
 import numpy as np
@@ -121,7 +72,7 @@ if __name__ == "__main__":
     plot_scatter_sample = params[23]
     npart_sample_satellite = params[24]
     # rcut_sat = params[26]
-
+    
     for i in range(init_snap, final_snap):
         with open(outpath+'info.log', 'a') as out_log:
             out_log.write("**************************\n")
@@ -129,6 +80,7 @@ if __name__ == "__main__":
 
             # *********************** Loading data: **************************
             if ((HostBFE == 1) | (HostSatUnboundBFE == 1)):
+                out_log.write("reading host particles")
                 halo = ios.read_snap_coordinates(
                         in_path, snapname+"_{:03d}".format(i),
                         n_halo_part, com_frame='MW', galaxy='MW')
@@ -164,8 +116,9 @@ if __name__ == "__main__":
                                     mass_tr, npart_sample, ids_tr)
 
             # Truncating satellite for BFE computation
-            elif ((SatBFE == 1) | (HostSatUnboundBFE == 1)):
-                # TODO : return BFE of the bound particles the LMC
+            if ((SatBFE == 1) | (HostSatUnboundBFE == 1)):
+                out_log.write("reading satellite particles \n")
+                
                 satellite = ios.read_snap_coordinates(
                         in_path, snapname+"_{:03d}".format(i),
                         n_halo_part, com_frame='sat', galaxy='sat')
@@ -174,10 +127,6 @@ if __name__ == "__main__":
                         = g2a.truncate_halo(
                                 satellite[0], satellite[1], satellite[3],
                                 satellite[4], rcut_halo)
-
-                # TODO : what if we are computing the BFE just for the satellite
-                # particles
-                print("Loading {} satellite particles".format(len(ids_sat_tr)))
 
                 if ((HostBFE == 1) | (HostSatUnboundBFE == 1)):
 
@@ -188,35 +137,43 @@ if __name__ == "__main__":
 
                     assert np.abs(mass_sat_em[0]/mass_tr[0]-1) < 1E-3,\
                             'Error: particle mass of satellite different to particle mass of the halo'
-                elif npart_sample_satellite > 0:
+
+                if npart_sample_satellite > 0:
                     pos_sat_em, vel_sat_em, mass_sat_em, ids_sat_em\
                             = g2a.sample_halo(
                                     pos_sat_tr, vel_sat_tr, mass_sat_tr,
                                     npart_sample_satellite, ids_sat_tr)
-                else:
+
+                else :
                     pos_sat_em = pos_sat_tr
                     vel_sat_em = vel_sat_tr
                     mass_sat_em = mass_sat_tr
                     ids_sat_em = ids_sat_tr
-            # Plot 2d projections scatter plots
-            elif plot_scatter_sample == 1:
+                    
+                    del(pos_sat_tr)
+                    del(vel_sat_tr)
+                    del(mass_sat_tr)
+                    del(ids_sat_tr)
+
+            if plot_scatter_sample == 1:
+                # Plot 2d projections scatter plots
 
                 if ((HostBFE == 1) | (HostSatUnboundBFE == 1)):
                     scatter_plot(
                             outpath+snapname+"_host_{:03d}".format(i),
                             pos_halo_tr)
 
-                elif SatBFE == 1:
+                if SatBFE == 1:
                     scatter_plot(
                             outpath+snapname+"_sat_{:03d}".format(i), 
-                            pos_sat_tr)
+                            pos_sat_em)
                 
                     
-            # *************************  Compute BFE: ***************************** 
+            #*************************  Compute BFE: ***************************** 
     
-            elif ((SatBFE == 1) & (SatBoundParticles == 1)):
-                print("Satellite total mass", np.sum(mass_sat_em))
+            if ((SatBFE == 1) & (SatBoundParticles == 1)):
                 out_log.write("Computing satellite bound particles!\n")
+
                 armadillo = lmcb.find_bound_particles(
                         pos_sat_em, vel_sat_em, mass_sat_em, ids_sat_em, 
                         sat_rs, nmax_sat, lmax_sat, ncores,
@@ -231,10 +188,9 @@ if __name__ == "__main__":
                 del(vel_sat_em)
                 
 
-                out_log.write('Done: Computing satellite bound particles!')
+                out_log.write('Done: Computing satellite bound particles! \n')
                 pos_bound = armadillo[0]
                 vel_bound = armadillo[1]
-                #pot_bound = armadillo[6]
                 ids_bound = armadillo[2]
                 pos_unbound = armadillo[3]
                 vel_unbound = armadillo[4]
@@ -245,24 +201,25 @@ if __name__ == "__main__":
                 N_part_unbound = len(ids_unbound)
                 mass_bound_array = np.ones(N_part_bound)*mass_sat_em[0]
                 mass_unbound_array = np.ones(N_part_unbound)*mass_sat_em[0]
+                
                 # Mass bound fractions
                 Mass_bound = (N_part_bound/len(ids_sat_em))*np.sum(mass_sat_em)
                 Mass_unbound = (N_part_unbound/len(ids_sat_em))*np.sum(mass_sat_em)
                 Mass_fraction = (N_part_bound)/len(ids_sat_em)
-                out_log.write("Satellite bound mass fraction", Mass_fraction)
-                out_log.write("Satellite bound mass", Mass_bound)
-                out_log.write("Satellite unbound mass", Mass_unbound)
+                out_log.write("Satellite bound mass fraction {} \n".format(Mass_fraction))
+                out_log.write("Satellite bound mass {} \n".format(Mass_bound))
+                out_log.write("Satellite unbound mass {} \n".format(Mass_unbound))
 
                 if plot_scatter_sample == 1:
-                    out_log.write("plotting scatter plots of unbound and bound satellite particles")
+                    out_log.write("plotting scatter plots of unbound and bound satellite particles \n")
                     scatter_plot(outpath+snapname+"_unbound_sat_{:03d}".format(i), pos_unbound)
                     scatter_plot(outpath+snapname+"_bound_sat_{:03d}".format(i), pos_bound)
                 
-                elif out_ids_bound_unbound_sat == 1:
-                    out_log.write("writing satellite bound id")
-                    np.savetxt(out_path+snapname+"_bound_sat_ids_{:03d}".format(i), ids_bound)
+                if out_ids_bound_unbound_sat == 1:
+                    out_log.write("writing satellite bound id \n")
+                    np.savetxt(outpath+snapname+"_bound_sat_ids_{:03d}".format(i), ids_bound)
 
-            elif HostSatUnboundBFE == 1:
+            if HostSatUnboundBFE == 1:
                 pool_host_sat = schwimmbad.choose_pool(mpi=args.mpi,
                     processes=args.n_cores)
                 out_log.write("Computing Host & satellite debris potential \n")
@@ -281,7 +238,7 @@ if __name__ == "__main__":
                         mass_Host_Debris[0], rcom_halo, vcom_halo)
             
     
-            elif HostBFE == 1:
+            if HostBFE == 1:
                 pool_host = schwimmbad.choose_pool(mpi=args.mpi,
                     processes=args.n_cores)
                 out_log.write("Computing Host BFE \n")
@@ -294,7 +251,7 @@ if __name__ == "__main__":
                         results_BFE_host, nmax, lmax, rs, mass_tr[0], rcom_halo, vcom_halo)
         
 
-            elif SatBFE == 1:
+            if SatBFE == 1:
                 out_log.write("Computing Sat BFE \n")
                 sat_coeff = cop.Coeff_parallel(
                         pos_bound, mass_bound_array, sat_rs, True, nmax_sat, lmax_sat)
@@ -314,7 +271,7 @@ if __name__ == "__main__":
     
             # TODO : check this flag 
             # Write snapshots ascii files
-            elif write_snaps_ascii == 1:
+            if write_snaps_ascii == 1:
     
                 # Write Host snap 
                 if HostBFE == 1: 
@@ -325,7 +282,7 @@ if __name__ == "__main__":
                             outpath, out_snap_host, pos_halo_tr,
                             vel_halo_tr, mass_tr, ids_tr)
 
-                elif SatBFE == 1:
+                if SatBFE == 1:
                     out_snap_sat_bound= 'LMC_bound_{}'.format(
                             snapname+"_{}".format(i))
 
