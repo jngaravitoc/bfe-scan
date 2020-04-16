@@ -28,10 +28,9 @@ def re_center(vec, cm):
         A new vector with a subtracted vector in each dimension.
     """
     #assert len(vec)==len(cm), "Make sure the len of your N-vector is the same as your 1d vector"
-
+    new_vec = np.copy(vec)
     for i in range(len(cm)):
-        vec[:,i] -= cm[i]
-
+      new_vec[:,i] = vec[:,i] - cm[i]
     return vec
 
 
@@ -150,7 +149,7 @@ def COM(xyz, vxyz, m):
     vyCOM = np.sum(vxyz[:,1]*m)/N
     vzCOM = np.sum(vxyz[:,2]*m)/N
 
-    return [xCOM, yCOM, zCOM], [vxCOM, vyCOM, vzCOM]
+    return np.array([xCOM, yCOM, zCOM]), np.array([vxCOM, vyCOM, vzCOM])
 
 
 def CM(xyz, vxyz, m, delta=0.025):
@@ -201,7 +200,7 @@ def CM(xyz, vxyz, m, delta=0.025):
         m = m[index]
         N = len(xyz)
         #Computing new CM coordinates and velocities
-        COM(xyz, vxyz, m)
+        rCOM, vCOM = COM(xyz, vxyz, m)
         xCM_new, yCM_new, zCM_new = rCOM
         vxCM_new, vyCM_new, vzCM_new = vCOM
 

@@ -106,18 +106,56 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='MW', galaxy='MW'):
         print('Computing coordinates in the satellite COM frame')
         if galaxy == 'MW':
             LMC_pos, LMC_vel, LMC_ids, LMC_pot, LMC_mass = sat_particles(all_pos, all_vel, all_ids, all_pot, all_mass, N_halo_part)
-            pos_cm, vel_cm  = com.CM(LMC_pos, LMC_vel, LMC_mass)
+        #    pos_cm, vel_cm  = com.CM(LMC_pos, LMC_vel, LMC_mass)
         else:
+            # TODO: organize this method in a function
+            # 
             # Guess com to re-center halo and precisely compute the COM
             rlmc = np.sqrt(pos[:,0]**2 + pos[:,1]**2 + pos[:,2]**2)
-            truncate = np.where(rlmc < 100)[0]
+            truncate = np.where(rlmc < 600)[0]
             # First COM guess
-            com1 = com.COM(pos[truncate], vel[truncate], np.ones(len(truncate)))
-            pos_recenter = com.re_center(pos[truncate], com1[0])
-            print(com1[0])
-            pos_cm, vel_cm  = com.CM(pos_recenter, vel[truncate], np.ones(len(mass[truncate]))*mass[0])
+            pos1 = np.copy(pos)
+            vel1 = np.copy(vel)
+
+            com1 = com.COM(pos1[truncate], vel1[truncate], np.ones(len(pos[truncate])))
+            pos_recenter = com.re_center(pos1, com1[0])
+            vel_recenter = com.re_center(vel1, com1[1])
+
+            rlmc = np.sqrt(pos_recenter[:,0]**2 + pos_recenter[:,1]**2 +  pos_recenter[:,2]**2)
+            truncate = np.where(rlmc < 200)[0]
+            
+            com2 = com.COM(
+                pos_recenter[truncate], vel_recenter[truncate], 
+                np.ones(len(truncate))*mass[0])
+
+            pos_recenter2 = com.re_center(pos_recenter, com2[0])
+            vel_recenter2 = com.re_center(vel_recenter, com2[1])
+
+            rlmc = np.sqrt(pos_recenter2[:,0]**2 + pos_recenter2[:,1]**2 + pos_recenter2[:,2]**2)
+            truncate2 = np.where(rlmc < 50)[0]
+            
+            com3 = com.CM(
+                pos_recenter2[truncate2], vel_recenter2[truncate2], 
+                np.ones(len(truncate2))*mass[0])
+            print(com3[0], len(com3[0]))
+            pos_recenter3 = com.re_center(pos_recenter2, com3[0])
+            vel_recenter3 = com.re_center(vel_recenter2, com3[1])
+            
+            print(com3)
+            rlmc = np.sqrt(pos_recenter3[:,0]**2 + pos_recenter3[:,1]**2 + pos_recenter3[:,2]**2)
+            truncate3 = np.where(rlmc < 10)[0]
+            
+            com4 = com.CM(
+                pos_recenter3[truncate3], vel_recenter3[truncate3], 
+                np.ones(len(truncate3))*mass[0])
+
+            print(com1)
+            print(com2)
+            print(com3)
+            print(com4)
+            pos_cm = com1[0] + com2[0] + com3[0][0] + com4[0][0]
+            vel_cm = com1[1] + com2[1] + com3[0][1] + com4[0][1]
             print(pos_cm, vel_cm)
-            pos_cm += com1[0]
 
     elif com_frame == 'LSR' :
         print('Computing coordinates in the LSR frame')
@@ -146,12 +184,13 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='MW', galaxy='MW'):
         del pos_disk
         del vel_disk
         del pot_disk
-    return pos_new, vel_new, pot, mass, ids
+    return pos_new, vel_new, pot, mass, ids, pos_cm, vel_cm
     
 
 
-def write_coefficients(filename, results, nmax, lmax, r_s, mass):
+def write_coefficients(filename, results, nmax, lmax, r_s, mass, rcom , vcom):
     """
+    Coefficients file format.
     """
 
     Nrows = (nmax+1)*(lmax+1)*(lmax+1)
@@ -164,15 +203,12 @@ def write_coefficients(filename, results, nmax, lmax, r_s, mass):
         data = np.array([Snlm, Tnlm]).T
     elif ndim == 5:
         Snlm = results[:,0]
-        varSnlm = results[:,1]
-        Tnlm = results[:,2]
+        Tnlm = results[:,1]
+        varSnlm = results[:,2]
         varTnlm = results[:,3]
         varSTnlm = results[:,4]
         data = np.array([Snlm, varSnlm, Tnlm, varTnlm, varSTnlm]).T
-    header = 'nmax: {:d}, lmax: {:d}, r_s: {:3.2f}, mass: {:10.3e}'.format(nmax, lmax, r_s, mass)
+
+    header = 'nmax: {:d} \n lmax: {:d} \n  r_s: {:3.2f} \n particle_mass: {:10.3e} \n  rcom= {} \n vcom = {}'.format(nmax, lmax, r_s, mass, rcom, vcom)
 
     np.savetxt(filename, data, header=header)
-
-
-
-

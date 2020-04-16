@@ -78,7 +78,7 @@ def compute_scf_pot(pos, rs, nmax, lmax, mass, ncores, npart_sample):
     """
     # Compute coefficients
     # Compute potential
-    #_gadget = 43007.1
+    G_gadget = 43007.1
 
     # Compute coefficients of bound particles
     pool = schwimmbad.choose_pool(mpi=False, processes=ncores)
@@ -92,7 +92,7 @@ def compute_scf_pot(pos, rs, nmax, lmax, mass, ncores, npart_sample):
 
     # Compute potential
     pot = parallel_potential_batches(pos, S, T, rs, nmax, lmax, 
-                                     43007.1, ncores, npart_sample)
+                                     G_gadget, ncores, npart_sample)
     del(S,T,pos)
     print("Done computing parallel potential")
     return pot
@@ -105,7 +105,7 @@ def bound_particles(pot, pos, vel, ids):
     vmag_lmc = np.sqrt(vel[:,0]**2 + vel[:,1]**2 + vel[:,2]**2)
     T = vmag_lmc**2/2
     V = pot
-
+    
     lmc_bound = np.where(T+V<=0)[0]
     lmc_unbound = np.where(T+V>0)[0]
     del(T, V, vmag_lmc)
@@ -120,22 +120,24 @@ def find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax, ncores, npart_samp
     """
     N_init = len(pos)
     pot = compute_scf_pot(pos, rs, nmax, lmax, mass, ncores, npart_sample)
-    #pos_bound, vel_bound, ids_bound, pos_unbound, vel_unbound, ids_unbound = bound_particles(pot, pos, vel, ids)
-    #N_bound = len(ids_bound)
-    #del(pos)
-    #del(vel)
-    #del(ids)
+    pos_bound, vel_bound, ids_bound, pos_unbound, vel_unbound, ids_unbound = bound_particles(pot, pos, vel, ids)
+    N_bound = len(ids_bound)
+    mp = mass[0]
+    del(pos)
+    del(vel)
+    del(ids)
+    del(mass)
     print('Initial number of particles:', N_init)
-    #print('Number of bound particles prior iteration {}'.format(N_bound))
+    print('Number of bound particles prior iteration {}'.format(N_bound))
     #print("bound mass", N_bound*mass[0])
     i=0
-    """
+    
     while (np.abs(N_init-N_bound) > (0.01*N_init)):
-        pot = compute_scf_pot(pos_bound, rs, nmax, lmax, np.ones(N_bound)*mass[0], ncores, npart_sample)
+        pot = compute_scf_pot(pos_bound, rs, nmax, lmax, np.ones(N_bound)*mp, ncores, npart_sample)
         pos_bound, vel_bound, ids_bound, p_unb, v_unb, ids_unb = bound_particles(pot, pos_bound, vel_bound, ids_bound)   
         N_init = N_bound
         N_bound = len(ids_bound)
-        print("bound mass", N_bound*mass[0])
+        print("bound mass", N_bound*mp)
         i+=1
         print(N_init, N_bound)
         print('Number of bound particles in iteration {}: {}'.format(i, N_bound))
@@ -145,9 +147,9 @@ def find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax, ncores, npart_samp
         del(p_unb)
         del(v_unb)
         del(ids_unb)
-    """
-    #return pos_bound, vel_bound, ids_bound, pos_unbound, vel_unbound, ids_unbound, pot#N_bound
-    return pos, vel, ids, np.zeros(len(ids)), np.zeros(len(ids)), mass, pot#N_bound
+   
+    return pos_bound, vel_bound, ids_bound, pos_unbound, vel_unbound, ids_unbound #N_bound
+    #return pos, vel, ids, np.zeros(len(ids)), np.zeros(len(ids)), mass, pot#N_bound
 
 
 

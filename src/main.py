@@ -123,7 +123,7 @@ if __name__ == "__main__":
     # rcut_sat = params[26]
 
     for i in range(init_snap, final_snap):
-        with open('info.log', 'a') as out_log:
+        with open(outpath+'info.log', 'a') as out_log:
             out_log.write("**************************\n")
             out_log.write("loading snap {}{} \n".format(snapname, i))
 
@@ -132,7 +132,8 @@ if __name__ == "__main__":
                 halo = ios.read_snap_coordinates(
                         in_path, snapname+"_{:03d}".format(i),
                         n_halo_part, com_frame='MW', galaxy='MW')
-
+                rcom_halo = halo[5]
+                vcom_halo = halo[6]
                 # Truncates halo:
                 if rcut_halo > 0:
                     out_log.write(
@@ -224,8 +225,12 @@ if __name__ == "__main__":
                 # npart_sample sets the number of particles to compute the
                 # potential in each cpu more than 100000 usually generate memory
                 # errors
+
+                # removing old variables
                 del(pos_sat_em)
                 del(vel_sat_em)
+                
+
                 out_log.write('Done: Computing satellite bound particles!')
                 pos_bound = armadillo[0]
                 vel_bound = armadillo[1]
@@ -234,6 +239,7 @@ if __name__ == "__main__":
                 pos_unbound = armadillo[3]
                 vel_unbound = armadillo[4]
                 ids_unbound = armadillo[5]
+
                 # mass arrays of bound and unbound particles
                 N_part_bound = len(ids_bound)
                 N_part_unbound = len(ids_unbound)
@@ -243,12 +249,15 @@ if __name__ == "__main__":
                 Mass_bound = (N_part_bound/len(ids_sat_em))*np.sum(mass_sat_em)
                 Mass_unbound = (N_part_unbound/len(ids_sat_em))*np.sum(mass_sat_em)
                 Mass_fraction = (N_part_bound)/len(ids_sat_em)
-                print("Satellite bound mass fraction", Mass_fraction)
-                print("Satellite bound mass", Mass_bound)
-                print("Satellite unbound mass", Mass_unbound)
-          
+                out_log.write("Satellite bound mass fraction", Mass_fraction)
+                out_log.write("Satellite bound mass", Mass_bound)
+                out_log.write("Satellite unbound mass", Mass_unbound)
 
-            if HostSatUnboundBFE == 1:
+                if plot_scatter_sample == 1:
+                    scatter_plot(outpath+snapname+"_unbound_sat_{:03d}".format(i), pos_unbound)
+                    scatter_plot(outpath+snapname+"_bound_sat_{:03d}".format(i), pos_bound)
+
+            elif HostSatUnboundBFE == 1:
                 pool_host_sat = schwimmbad.choose_pool(mpi=args.mpi,
                     processes=args.n_cores)
                 out_log.write("Computing Host & satellite debris potential \n")
@@ -264,10 +273,10 @@ if __name__ == "__main__":
                 ios.write_coefficients(
                         outpath+out_name+"HostSatUnbound_snap_{:0>3d}.txt".format(i),
                         results_BFE_halo_debris, nmax, lmax, rs,
-                        mass_Host_Debris[0])
+                        mass_Host_Debris[0], rcom_halo, vcom_halo)
             
     
-            if HostBFE == 1:
+            elif HostBFE == 1:
                 pool_host = schwimmbad.choose_pool(mpi=args.mpi,
                     processes=args.n_cores)
                 out_log.write("Computing Host BFE \n")
@@ -277,7 +286,7 @@ if __name__ == "__main__":
                 out_log.write("Done computing Host BFE")
                 ios.write_coefficients(
                         outpath+out_name+"Host_snap_{:0>3d}.txt".format(i),
-                        results_BFE_host, nmax, lmax, rs, mass_tr[0])
+                        results_BFE_host, nmax, lmax, rs, mass_tr[0], rcom_halo, vcom_halo)
         
 
             elif SatBFE == 1:
@@ -293,13 +302,14 @@ if __name__ == "__main__":
     
                 ios.write_coefficients(
                         outpath+out_name+"Sat_snap_{:0>3d}.txt".format(i),
-                        results_BFE_sat, nmax_sat, lmax_sat, rs, mass_bound_array[0])
+                        results_BFE_sat, nmax_sat, lmax_sat, rs, 
+                        mass_bound_array[0], satellite[5], satellite[6])
         
             
     
             # TODO : check this flag 
             # Write snapshots ascii files
-            if write_snaps_ascii == 1:
+            elif write_snaps_ascii == 1:
     
                 # Write Host snap 
                 if HostBFE == 1: 
@@ -310,7 +320,7 @@ if __name__ == "__main__":
                             outpath, out_snap_host, pos_halo_tr,
                             vel_halo_tr, mass_tr, ids_tr)
 
-                if SatBFE == 1:
+                elif SatBFE == 1:
                     out_snap_sat_bound= 'LMC_bound_{}'.format(
                             snapname+"{}".format(i))
 
