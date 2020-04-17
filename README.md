@@ -11,28 +11,24 @@ Pipeline to analyze N-body simulations using Basis Field Expansions (BFE)
   - Run in parallel for the nlm list.
   - Write particle data in Gadget format if desired.
   
-TODO:
-    Parameter file:
-        - Make different categories for Host and Satellite?
-        - Think that if this is going to be general we might need more than
-        one satellite.
-    Implement all optional outputs:
-        - random satellite sample *
-        - output ascii files
-        - what if the COM is provided?
-        - use ids to track bound - unbound particles -- think about cosmo
-        zooms
-        - track bound mass fraction
-        - write Gadget format file
-        - Check if all the flags are working
-        - Flag: write_snaps_ascii
+#TODO:
+  -Parameter file:
+      - Make different categories for Host and Satellite?
+      - Think that if this is going to be general we might need more than
+      one satellite.
+  -Implement all optional outputs:
+      - random satellite sample *
+      - output ascii files
+      - what if the COM is provided?
+      - use ids to track bound - unbound particles -- think about cosmo
+      zooms
+      - track bound mass fraction
+      - write Gadget format file
+      - Check if all the flags are working
+      - Flag: write_snaps_ascii
         - ids_tr is needed? or can be deleted to use less memory?
-    Implement checks:
-      - tests for every function
-    Implement parallel computation for bound satellite particles.
-    * : fast to implement
-    ** : may need some time to implement
-    Parallelization:
+   - Implement tests
+   - Parallelization:
         - Try parallel structure discussed in articles.adsabs.harvard.edu/pdf/1995ApJ...446..717H
         - Fix results=pool() returns empty list if --ncores==1? when running in a single processor
 - known issues:
