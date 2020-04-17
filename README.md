@@ -12,21 +12,14 @@ Pipeline to analyze N-body simulations using Basis Field Expansions (BFE)
   - Write particle data in Gadget format if desired.
   
 # TODO:
-  -Parameter file:
-      - Make different categories for Host and Satellite?
-      - Think that if this is going to be general we might need more than
-      one satellite.
-  -Implement all optional outputs:
-      - random satellite sample *
-      - output ascii files
-      - what if the COM is provided?
-      - use ids to track bound - unbound particles -- think about cosmo
-      zooms
+  - Parameter file:
+      - Make different parameter categories for Host and Satellites.
+      - Generalize to multiple satellites.
+      - Read COM if provided
+
+  - Optional outputs:
       - track bound mass fraction
-      - write Gadget format file
-      - Check if all the flags are working
-      - Flag: write_snaps_ascii
-        - ids_tr is needed? or can be deleted to use less memory?
+      - write output on Gadget format file
    - Implement tests
    - Parallelization:
         - Try parallel structure discussed in articles.adsabs.harvard.edu/pdf/1995ApJ...446..717H
