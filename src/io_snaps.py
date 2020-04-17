@@ -112,12 +112,13 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='MW', galaxy='MW'):
             # 
             # Guess com to re-center halo and precisely compute the COM
             rlmc = np.sqrt(pos[:,0]**2 + pos[:,1]**2 + pos[:,2]**2)
-            truncate = np.where(rlmc < 600)[0]
+            #truncate = np.where(rlmc < 600)[0]
             # First COM guess
             pos1 = np.copy(pos)
             vel1 = np.copy(vel)
 
-            com1 = com.COM(pos1[truncate], vel1[truncate], np.ones(len(pos[truncate])))
+            #com1 = com.COM(pos1[truncate], vel1[truncate], np.ones(len(pos[truncate])))
+            com1 = com.COM(pos1, vel1, np.ones(len(pos)))
             pos_recenter = com.re_center(pos1, com1[0])
             vel_recenter = com.re_center(vel1, com1[1])
 
@@ -143,7 +144,7 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='MW', galaxy='MW'):
             
             print(com3)
             rlmc = np.sqrt(pos_recenter3[:,0]**2 + pos_recenter3[:,1]**2 + pos_recenter3[:,2]**2)
-            truncate3 = np.where(rlmc < 10)[0]
+            truncate3 = np.where(rlmc < 20)[0]
             
             com4 = com.CM(
                 pos_recenter3[truncate3], vel_recenter3[truncate3], 
@@ -153,8 +154,8 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='MW', galaxy='MW'):
             print(com2)
             print(com3)
             print(com4)
-            pos_cm = com1[0] + com2[0] + com3[0][0] + com4[0][0]
-            vel_cm = com1[1] + com2[1] + com3[0][1] + com4[0][1]
+            pos_cm = com1[0] + com2[0] + com3[0] + com4[0]
+            vel_cm = com1[1] + com2[1] + com3[1] + com4[1]
             print(pos_cm, vel_cm)
 
     elif com_frame == 'LSR' :
