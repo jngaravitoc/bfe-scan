@@ -11,7 +11,7 @@ Pipeline to analyze N-body simulations using Basis Field Expansions (BFE)
   - Run in parallel for the nlm list.
   - Write particle data in Gadget format if desired.
   
-#TODO:
+# TODO:
   -Parameter file:
       - Make different categories for Host and Satellite?
       - Think that if this is going to be general we might need more than
