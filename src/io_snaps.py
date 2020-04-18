@@ -210,6 +210,6 @@ def write_coefficients(filename, results, nmax, lmax, r_s, mass, rcom , vcom):
         varSTnlm = results[:,4]
         data = np.array([Snlm, varSnlm, Tnlm, varTnlm, varSTnlm]).T
 
-    header = 'nmax: {:d} \n lmax: {:d} \n  r_s: {:3.2f} \n particle_mass: {:10.3e} \n  rcom= {} \n vcom = {}'.format(nmax, lmax, r_s, mass, rcom, vcom)
+    header = ' nmax: {:d} \n lmax: {:d} \n r_s: {:3.2f} \n particle_mass: {:10.3e} \n rcom: {} \n vcom: {}'.format(nmax, lmax, r_s, mass, rcom, vcom)
 
     np.savetxt(filename, data, header=header)
