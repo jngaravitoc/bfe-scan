@@ -44,7 +44,7 @@ class Coeff_parallel(object):
         if self.var == True:
             varS, varT, varST = STnlm_var_discrete(self.s, self.phi, self.X, self.mass, n, l, m)
             return S, T, varS, varT, varST
-        else:
+        else :
             return S, T
 
     def main(self, pool):

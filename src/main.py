@@ -195,7 +195,7 @@ if __name__ == "__main__":
                 pos_unbound = armadillo[3]
                 vel_unbound = armadillo[4]
                 ids_unbound = armadillo[5]
-
+                rs_opt = armadillo[6]
                 # mass arrays of bound and unbound particles
                 N_part_bound = len(ids_bound)
                 N_part_unbound = len(ids_unbound)
@@ -244,7 +244,9 @@ if __name__ == "__main__":
                 out_log.write("Computing Host BFE \n")
                 halo_coeff = cop.Coeff_parallel(
                         pos_halo_tr, mass_tr, rs, True, nmax, lmax)
+                
                 results_BFE_host = halo_coeff.main(pool_host)
+                
                 out_log.write("Done computing Host BFE")
                 ios.write_coefficients(
                         outpath+out_name+"Host_snap_{:0>3d}.txt".format(i),
@@ -253,18 +255,17 @@ if __name__ == "__main__":
 
             if SatBFE == 1:
                 out_log.write("Computing Sat BFE \n")
-                sat_coeff = cop.Coeff_parallel(
-                        pos_bound, mass_bound_array, sat_rs, True, nmax_sat, lmax_sat)
-
                 pool_sat = schwimmbad.choose_pool(mpi=args.mpi,
                                                   processes=args.n_cores)
+                sat_coeff = cop.Coeff_parallel(
+                        pos_bound, mass_bound_array, rs_opt, True, nmax_sat, lmax_sat)
 
                 results_BFE_sat = sat_coeff.main(pool_sat)
                 out_log.write("Done computing Sat BFE \n")
     
                 ios.write_coefficients(
                         outpath+out_name+"Sat_snap_{:0>3d}.txt".format(i),
-                        results_BFE_sat, nmax_sat, lmax_sat, rs, 
+                        results_BFE_sat, nmax_sat, lmax_sat, rs_opt,
                         mass_bound_array[0], satellite[5], satellite[6])
         
             
