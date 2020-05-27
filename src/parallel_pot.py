@@ -103,7 +103,6 @@ class PBFEpot:
         results = pool.map(self.potential, tasks)
         #for i in range(len(nlist)):
         #    results = self.potential([nlist[i], llist[i], mlist[i], self.S[i], self.T[i]])
-        print(np.sum(results, axis=0))
         pool.close()
         return np.sum(results, axis=0)
 

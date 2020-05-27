@@ -46,9 +46,34 @@ def read_coeff_matrix(filename, nfiles, n, l, m, n_min=0, n_max=1000, snaps=0):
     T_mean_matrix = reshape_matrix(T_mean, n, l, m)
 
     return S_mean_matrix, T_mean_matrix
-    
-def read_cov_elements(filename, nfiles, n, l, m, n_min=0, n_max=1000, snaps=0):
 
+def read_coeffcov_matrix(filename, nfiles, n, l, m, snaps=0, read_type=0):
+    """
+    Compute the mean of the coefficients from multiple files and return the mean values.
+    """
+
+    coeff = np.loadtxt(filename + '_{:03d}.txt'.format(snaps))
+    if read_type==0:
+        T = coeff[:,2]
+        Scov = coeff[:,1]
+    elif read_type==1:
+        T = coeff[:,1]
+        Scov = coeff[:,2]
+    S = coeff[:,0]
+    Tcov = coeff[:,3]
+    STcov = coeff[:,4]
+
+
+    S_matrix = reshape_matrix(S, n, l, m)
+    T_matrix = reshape_matrix(T, n, l, m)
+    Svar_matrix = reshape_matrix(Scov, n, l, m)
+    Tvar_matrix = reshape_matrix(Tcov, n, l, m)
+    STvar_matrix = reshape_matrix(STcov, n, l, m)
+
+    return S_matrix, T_matrix, Svar_matrix, Tvar_matrix, STvar_matrix
+
+
+def read_cov_elements(filename, nfiles, n, l, m, n_min=0, n_max=1000, snaps=0):
 
     Scov_matrix = np.zeros((int((n+1)*(l+1)*(l/2.+1)), nfiles))
     Tcov_matrix = np.zeros((int((n+1)*(l+1)*(l/2.+1)), nfiles))

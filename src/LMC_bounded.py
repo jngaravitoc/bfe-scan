@@ -137,16 +137,17 @@ def compute_scf_pot(pos, rs, nmax, lmax, mass, ncores, npart_sample):
     return pot, rs_opt
 
 
-def bound_particles(pot, pos, vel, ids):
+def bound_particles(pot, pos, vel, ids, rcut=0):
     """
     Find bound particles
+    TODO: Make rcut input paramter
     """
-    vmag_lmc = np.sqrt(vel[:,0]**2 + vel[:,1]**2 + vel[:,2]**2)
+    vmag_lmc = np.sqrt(np.sum(vel**2, axis=1))
     T = vmag_lmc**2/2
     V = pot
-    
-    lmc_bound = np.where(T+V<=0)[0]
-    lmc_unbound = np.where(T+V>0)[0]
+    r = np.sqrt(np.sum(pos**2, axis=1))
+    lmc_bound = np.where((T+V<=0) | (r<=rcut))[0]
+    lmc_unbound = np.where((T+V>0) & (r>rcut))[0]
     del(T, V, vmag_lmc)
 
     return pos[lmc_bound], vel[lmc_bound], ids[lmc_bound], pos[lmc_unbound], vel[lmc_unbound], ids[lmc_unbound]
@@ -182,7 +183,7 @@ def find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax, ncores, npart_samp
         print("bound mass", N_bound*mp)
         i+=1
         print(N_init, N_bound)
-        print('Number of bound particles in iteration {}: {}'.format(i, N_bound))
+        #print('Number of bound particles in iteration {}: {}'.format(i, N_bound))
         pos_unbound = np.vstack((pos_unbound, p_unb))
         vel_unbound = np.vstack((vel_unbound, v_unb))
         ids_unbound = np.hstack((ids_unbound, ids_unb))
