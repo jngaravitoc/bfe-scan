@@ -1,15 +1,14 @@
 import numpy as np
-import sys
-sys.path.append('../bfe-py/')
-from bfe import com
+from bfe.ios import com, shrinking_sphere
+
 
 def test_com_halo():
-    filename = "/home/xzk/work/github/bfe-py/tests/data/plummer_sphere_10K.txt"
+    filename = "/home/u9/jngaravitoc/codes/bfe-py/tests/data/plummer_sphere_10K.txt"
     data = np.loadtxt(filename)
     pos = data[:,0:3]
     vel = data[:,3:6]
     mk = data[:,6]
-    rcom, vcom = com.COM(pos, vel, mk)
+    rcom, vcom = com(pos, vel, mk)
     rcom_true = np.array([ 7.46023226, 29.95142926, -5.48522253])
     vcom_true = np.array([ 11.74871876,  41.78031904, -65.730021])
 
@@ -18,12 +17,12 @@ def test_com_halo():
 
 
 def test_com_shrinking_sphere_halo():
-    filename = "/home/xzk/work/github/bfe-py/tests/data/plummer_sphere_10K.txt"
+    filename = "/home/u9/jngaravitoc/codes/bfe-py/tests/data/plummer_sphere_10K.txt"
     data = np.loadtxt(filename)
     pos = data[:,0:3]
     vel = data[:,3:6]
     mk = data[:,6]
-    rcom, vcom = com.CM(pos, vel, mk, delta=0.025)
+    rcom, vcom = shrinking_sphere(pos, vel, mk, delta=0.025)
     rcom_true = np.array([-0.05291256, -0.10510422,  0.18606588])
     vcom_true = np.array([-3.63038043,  0.33830252,  2.06705637])
 
@@ -33,3 +32,5 @@ def test_com_shrinking_sphere_halo():
             """bfe-py.com.shrinking_sphere is failing """
 
 
+test_com_halo()
+test_com_shrinking_sphere_halo()
