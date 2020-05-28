@@ -1,0 +1,28 @@
+---
+inpath : "/rsgrps/gbeslastudents/nicolas/MWLMC_sims/100M/fidutials/MWLMC5_b1/"
+snapname : "MWLMC5_100M_new_b1"
+outpath : "/rsgrps/gbeslastudents/nicolas/MWLMC_sims/BFE/MW/MWLMC5/"
+outname : "BFE MWLMC5_b1"
+npartHalo : 100000000
+samplePart : 70000000
+nmax : 10
+lmax : 5
+rs : 40.85 
+ncores : 4
+mpi : 1
+rhaloCut : 400
+initSnap : 90
+finalSnap : 91
+SatBFE : 1
+Satrs : 10
+nmaxSat : 15
+lmaxSat : 5
+HostBFE : 0
+SatBoundParticles : 1
+HostSatUnboundPart : 0
+WriteSnapsAscii : 0
+OutIdsBoundUnbound : 1
+PlotScatterSample : 1 
+samplePartSat : 500000
+...
+
