@@ -11,6 +11,20 @@ Pipeline to analyze N-body simulations using Basis Field Expansions (BFE)
   - Run in parallel for the nlm list.
   - Write particle data in Gadget format if desired.
   
+# Code structure:
+  - io
+    - handle I/O libraries for different simulations formats using [pygadgetreader](https://bitbucket.org/rthompson/pygadgetreader/src/default/)
+  - satellites
+    - Finds bound particles of a Satellite
+  - coefficients
+    - compute coefficients in parallel using [gala](https://github.com/adrn/gala) and schwimmbad
+  - analysis
+    - energy of coefficients
+    - plotting routines
+  - noise
+    - routines regaring noise
+    
+  
 # TODO:
   - Parameter file:
       - Make different parameter categories for Host and Satellites.
@@ -46,3 +60,5 @@ Pipeline to analyze N-body simulations using Basis Field Expansions (BFE)
 
 
 # Installation:
+
+pyhton setup.py install
