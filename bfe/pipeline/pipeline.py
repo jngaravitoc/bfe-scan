@@ -235,7 +235,7 @@ if __name__ == "__main__":
                 results_BFE_halo_debris = halo_debris_coeff.main(pool_host_sat)
                 out_log.write("Done computing Host & satellite debris potential")
                 ios.write_coefficients(
-                        outpath+out_name+"HostSatUnbound_snap_{:0>3d}.txt".format(i),
+                        outpath+out_name+"_host_sat_unbound_snap_{:0>3d}.txt".format(i),
                         results_BFE_halo_debris, nmax, lmax, rs,
                         mass_Host_Debris[0], rcom_halo, vcom_halo)
             
@@ -251,24 +251,39 @@ if __name__ == "__main__":
                 
                 out_log.write("Done computing Host BFE")
                 ios.write_coefficients(
-                        outpath+out_name+"Host_snap_{:0>3d}.txt".format(i),
+                        outpath+out_name+"_host_snap_{:0>3d}.txt".format(i),
                         results_BFE_host, nmax, lmax, rs, mass_tr[0], rcom_halo, vcom_halo)
         
 
-            if SatBFE == 1:
+            if ((SatBFE == 1) & (SatBoundParticles == 1)):
                 out_log.write("Computing Sat BFE \n")
                 pool_sat = schwimmbad.choose_pool(mpi=args.mpi,
                                                   processes=args.n_cores)
                 sat_coeff = cop.Coeff_parallel(
-                        pos_bound, mass_bound_array, rs_opt, True, nmax_sat, lmax_sat)
+                        pos_bound, mass_bound_array, sat_rs, True, nmax_sat, lmax_sat)
 
                 results_BFE_sat = sat_coeff.main(pool_sat)
                 out_log.write("Done computing Sat BFE \n")
     
                 ios.write_coefficients(
-                        outpath+out_name+"Sat_snap_{:0>3d}.txt".format(i),
-                        results_BFE_sat, nmax_sat, lmax_sat, rs_opt,
+                        outpath+out_name+"_sat_bound_snap_{:0>3d}.txt".format(i),
+                        results_BFE_sat, nmax_sat, lmax_sat, sat_rs,
                         mass_bound_array[0], satellite[5], satellite[6])
+        
+            if ((SatBFE == 1) & (SatBoundParticles == 0)):
+                out_log.write("Computing Sat BFE \n")
+                pool_sat = schwimmbad.choose_pool(mpi=args.mpi,
+                                                  processes=args.n_cores)
+                sat_coeff = cop.Coeff_parallel(
+                        pos_sat_em, mass_sat_em, sat_rs, True, nmax_sat, lmax_sat)
+
+                results_BFE_sat = sat_coeff.main(pool_sat)
+                out_log.write("Done computing Sat BFE \n")
+    
+                ios.write_coefficients(
+                        outpath+out_name+"_sat_snap_{:0>3d}.txt".format(i),
+                        results_BFE_sat, nmax_sat, lmax_sat, sat_rs,
+                        mass_sat_em[0], satellite[5], satellite[6])
         
             
     
