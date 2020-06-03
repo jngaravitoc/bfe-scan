@@ -1,8 +1,7 @@
-# bfe-scan
-Pipeline to analyze N-body simulations using Basis Field Expansions (BFE)
+# Basis Field Expansions Explorer
+BFEE is a python package specialized in analyzing snapshots from N-body simulations using Basis Field Expansions (BFE).
 
 # Features: 
-
   - Compute BFE expansion from a collection of snapshots
   - Separates a satellite from its host by finding bound
     satellite particles.
