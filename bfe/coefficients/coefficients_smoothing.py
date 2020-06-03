@@ -4,14 +4,14 @@ from numpy import linalg
 
 
 ## Reading coefficients
-def reshape_matrix(matrix, n, l, m):
-    col_matrix = np.zeros((n+1, l+1, m+1))
+def reshape_matrix(matrix, nmax, lmax, mmax):
+    col_matrix = np.zeros((nmax+1, lmax+1, mmax+1))
 
 
     counter = 0
-    for n in range(n+1):
-        for l in range(l+1):
-            for m in range(0, l+1):
+    for n in range(nmax+1):
+        for l in range(lmax+1):
+            for m in range(0, lmax+1):
                 col_matrix[n][l][m] = matrix[counter]
                 counter +=1
     return col_matrix
