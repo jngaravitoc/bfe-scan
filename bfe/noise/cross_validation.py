@@ -1,7 +1,7 @@
 import numpy as np
 import schwimmbad
-import io_snaps as ios
-import coeff_parallel as cop
+import bfe.ios.io_snaps as ios
+import bfe.coefficients.parallel_coefficients as cop
 import sys
 
 def coeff_computation_all(pos, r_s, nmax, lmax, out_filename, cores=2):
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     print(filename)
     print('**********')
     outname = sys.argv[2]
-    n_sample = 100
+    n_sample = 50
     r_s = 40.85
     nmax = 20
     lmax = 5
