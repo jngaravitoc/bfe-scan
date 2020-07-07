@@ -13,6 +13,7 @@ import numpy as np
 import schwimmbad
 import bfe.ios.io_snaps as ios
 import bfe.coefficients.parallel_coefficients as cop
+import bfe.coefficients.parallel_potential as pop
 import sys
 
 def coeff_computation_all(pos, r_s, nmax, lmax, out_filename, cores=2):
@@ -74,6 +75,7 @@ def coeff_computation(pos, r_s, nmax, lmax, out_filename, cores=2):
     n_batches = np.shape(pos)[0]
     npart_sample = np.shape(pos)[1]
     mass = np.ones(npart_sample)/npart_sample
+    rho_all = np.zeros((n_batches, npart_sample))
     for k in range(n_batches):    
         print('computing coefficients in batch {:d}'.format(k))
         pool = schwimmbad.choose_pool(mpi=False, processes=cores)
@@ -83,7 +85,10 @@ def coeff_computation(pos, r_s, nmax, lmax, out_filename, cores=2):
         ios.write_coefficients(out_filename+'_batch_{:0>3d}.txt'.format(k), \
                                results, nmax, lmax,\
                                r_s, mass[0], rcom=0, vcom=0)
-        
+        pool_dens = schwimmbad.choose_pool(mpi=False, processes=cores)
+        batch_dens = pop.BFEpot(pos[k], results[:,0], results[:,1], r_s, nmax, lmax, G=1, M=1)
+        rho_all[:,k] = batch_dens.main(pool_dens)
+    np.savetxt(out_filename + "_rho_all.txt", rho_all)
     return 0
 
 if __name__ == "__main__":
