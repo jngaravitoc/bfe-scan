@@ -1,3 +1,14 @@
+"""
+Computes coefficients of 
+
+TODO:
+
+    1. Make a stand alone parallel coefficient computation.
+    2. Comment out the code
+    3. Make the code as a stand alone script?
+
+"""
+
 import numpy as np
 import schwimmbad
 import bfe.ios.io_snaps as ios
@@ -5,6 +16,10 @@ import bfe.coefficients.parallel_coefficients as cop
 import sys
 
 def coeff_computation_all(pos, r_s, nmax, lmax, out_filename, cores=2):
+    """
+    Compute coefficients in parallel
+
+    """
     npart_sample = np.shape(pos)[0]
     print(npart_sample)
     mass = np.ones(npart_sample)/npart_sample
@@ -20,6 +35,21 @@ def coeff_computation_all(pos, r_s, nmax, lmax, out_filename, cores=2):
 
 
 def random_halo_sample(n_batches, pos):
+    """
+    Make N bathes of random unique particles 3d positions.
+    
+    Parameters:
+    ----------
+        N batches : int
+            Number of batches
+        pos : numpy array
+            Array with all the positions of the particles
+
+    Returns:
+    --------
+        pos_shuffle: positions of the random particles shape(Nbatches, Npart_bath, 3)
+
+    """
     Ninit = len(pos)
     
     assert Ninit%n_batches==0, 'N sample is not a multiple of the total number of particles'
@@ -37,6 +67,10 @@ def random_halo_sample(n_batches, pos):
 
 
 def coeff_computation(pos, r_s, nmax, lmax, out_filename, cores=2):
+    """
+    Computes coefficients in N-batches
+
+    """
     n_batches = np.shape(pos)[0]
     npart_sample = np.shape(pos)[1]
     mass = np.ones(npart_sample)/npart_sample
@@ -67,4 +101,3 @@ if __name__ == "__main__":
     coeff_computation_all(pos[pos_rand], r_s, nmax, lmax, outname)
     pos_batches = random_halo_sample(n_sample, pos[pos_rand])
     coeff_computation(pos_batches, r_s, nmax, lmax, outname)
-
