@@ -16,7 +16,7 @@ import time
 class PBFEpot:
     def __init__(self, pos, S, T, rs, nmax, lmax, G, M):
         """
-        Computes parallel BFE potential
+        Computes parallel BFE potential and density
         Attributes:
             nlm_list     Creates arrays of indices n, l, m from 3d to 1d.
             bfe_pot      Core function that computed the BFE potential.
@@ -94,6 +94,24 @@ class PBFEpot:
         pot = self.bfe_pot(nlist, llist, mlist, self.s, self.theta)\
                 * (S*np.cos(mlist*self.phi)+T*np.sin(mlist*self.phi))
         return pot*self.G*self.M/self.rs
+    
+    def bfe_rho(self, n, l, m, s, theta):
+        # Eq 10 in Lowing+2011
+    
+        rho_l = s**(l-1) * (1+s)**(-2*l-3) 
+        rho_nlm = special.eval_gegenbauer(n, 2*l+1.5, ((s-1)/(s+1))) * special.lpmv(m, l, np.cos(theta))
+        factor = ((2*l+1) * math.factorial(l-m)/math.factorial(l+m))**0.5
+        #factor=1
+        Knl = 0.5*n*(n+4*l+3) + (l+1)*(2*l+1)
+        return  factor*Knl*rho_l*phi_nlm/(2*np.pi)
+
+    
+    def density(self, task):
+        # Eq 13 in Lowing+2011
+        nlist, llist, mlist, S, T = task
+        rho = self.bfe_rho(nlist, llist, mlist, self.s, self.theta)\
+                * (S*np.cos(mlist*self.phi)+T*np.sin(mlist*self.phi))
+        return rho*self.M/self.rs
     
     def main(self, pool):
         nlist, llist, mlist = self.nlm_list(len(self.S), self.nmax, self.lmax)
