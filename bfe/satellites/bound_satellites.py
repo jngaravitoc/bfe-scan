@@ -115,8 +115,8 @@ def compute_scf_pot(pos, rs, nmax, lmax, mass, ncores, npart_sample):
     # Compute coefficients of bound particles
     pool = schwimmbad.choose_pool(mpi=False, processes=ncores)
     assert len(pos)==len(mass), 'position array and mass array length do not match'
-    rs_opt = find_scale_length(pos, mass, rs_max=rs)
-    print(rs_opt, rs)
+    #s_opt = find_scale_length(pos, mass, rs_max=rs)
+    #rint(rs_opt, rs)
     rs_opt = rs
     # TODO: make rs_max to be an opt parameter
     print("rs", rs_opt)
@@ -135,7 +135,7 @@ def compute_scf_pot(pos, rs, nmax, lmax, mass, ncores, npart_sample):
     return pot, rs_opt
 
 
-def bound_particles(pot, pos, vel, ids, rcut=0):
+def bound_particles(pot, pos, vel, ids, rcut=5):
     """
     Find bound particles
     TODO: Make rcut input paramter
@@ -146,7 +146,7 @@ def bound_particles(pot, pos, vel, ids, rcut=0):
     r = np.sqrt(np.sum(pos**2, axis=1))
     lmc_bound = np.where((T+V<=0) | (r<=rcut))[0]
     lmc_unbound = np.where((T+V>0) & (r>rcut))[0]
-    del(T, V, vmag_lmc)
+    del(T, V, vmag_lmc, r)
 
     return pos[lmc_bound], vel[lmc_bound], ids[lmc_bound], pos[lmc_unbound], vel[lmc_unbound], ids[lmc_unbound]
 
@@ -175,7 +175,7 @@ def find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax, ncores, npart_samp
     
     while (np.abs(N_init-N_bound) > (0.01*N_init)):
         pot, rs_opt = compute_scf_pot(pos_bound, rs, nmax, lmax, np.ones(N_bound)*mp, ncores, npart_sample)
-        pos_bound, vel_bound, ids_bound, p_unb, v_unb, ids_unb = bound_particles(pot, pos_bound, vel_bound, ids_bound)   
+        pos_bound, vel_bound, ids_bound, p_unb, v_unb, ids_unb =  bound_particles(pot, pos_bound, vel_bound, ids_bound)   
         N_init = N_bound
         N_bound = len(ids_bound)
         print("bound mass", N_bound*mp)
@@ -192,5 +192,5 @@ def find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax, ncores, npart_samp
         del(v_unb)
         del(ids_unb)
    
-    return pos_bound, vel_bound, ids_bound, pos_unbound, vel_unbound, ids_unbound, rs_opt#N_bound
+    return pos_bound, vel_bound, ids_bound, pos_unbound, vel_unbound, ids_unbound#, rs_opt#N_bound
     #return pos, vel, ids, np.zeros(len(ids)), np.zeros(len(ids)), mass, pot#N_bound
