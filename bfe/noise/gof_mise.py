@@ -1,5 +1,7 @@
 """
-Code to compute the GOF
+Code to estimate the optimal signal to noise of a Basis Function Expansions. 
+
+Using the Kullback-Leibler divergence and the goodness of fit
 
 """
 
@@ -11,9 +13,10 @@ from joblib import Parallel, delayed
 import sys
 # Local libraries
 sys.path.append('/home/u9/jngaravitoc/codes/Kullback-Leibler/')
-import coefficients_smoothing
+import bfe.coefficients.coefficients_smoothing as coefficients_smoothing
 
 
+# for timing and debugging purposes
 def time_now(): 
     h = datetime.datetime.now().hour
     m = datetime.datetime.now().minute
@@ -27,6 +30,18 @@ def time_diff(t1, t2):
 
 def write_output(file_name, data):
     np.savetxt(file_name, data)
+
+def coeff_rand_generator(order):
+        # generates random coefficients with different orders
+    S = np.random.random((order, order, order))
+    T = np.random.random((order, order, order))
+    return S, T
+
+
+# --------------
+
+
+# Some math
 
 def Knl(n, l):
     """
@@ -63,12 +78,16 @@ def factors(n, n_p, l, r_s):
     K_npl = Knl(n_p, l)
     return f*K_nl*K_npl
 
+# -------------------------
+
 def coefficients_sum(S, T, nmax, lmax, r_s):
     """
     Sums over each component: See equation 5 in the companion notes.
+    This is the function that takes longer to run!! 
     """
     rho2 = 0
     for n_p in range(nmax):
+      print(n_p, "np in the loop")
       for n in range(nmax):
         for l in range(lmax):
           f = factors(n, n_p, l, r_s)
@@ -76,8 +95,6 @@ def coefficients_sum(S, T, nmax, lmax, r_s):
           for m in range(lmax):
             rho2 += 2*(S[n,l,m]*S[n_p,l,m] + T[n,l,m]*T[n_p,l,m])*(-1)**m * f * I   
     return rho2
-
-
 
 def coefficients_sum_fast(S, T, order, r_s):
     """
@@ -102,14 +119,38 @@ def coefficients_sum_fast(S, T, order, r_s):
    
     # I can't skip the sum over n_p
     for n_p in range(0, order):
+
       # Simplified sum over all of the coefficients that are non-zero 
       for i in range(len(nmax)):
         f = factors(nmax[i], n_p, lmax[i], r_s)
         I = integrate.quad(integrand, -1, 1, args=(nmax[i], n_p, lmax[i]))[0]
         rho2 += 2*(S[nmax[i],lmax[i],mmax[i]]*S[n_p,lmax[i],mmax[i]] + T[nmax[i],lmax[i],mmax[i]]*T[n_p,lmax[i],mmax[i]])*(-1)**mmax[i] * f * I 
-
     return rho2
 
+
+
+
+def get_coefficients(i, sn):
+    """
+    TODO: can fasten this by not reading the coefficients for every sn cut
+    """
+    path = '/home/xzk/work/github/MW-LMC-SCF/code/KL/'
+    filename = 'test_coeff_MW_100M_b1_dm_part_1e6_300_coefficients_batch'
+    #mass = 1/1E3
+    #mass = 1.577212515257997438e-05
+    coeff = coefficients_smoothing.read_coeffcov_matrix(path+filename,
+                                                       nfiles=1, n=nmax,l=lmax,
+                                                       m=lmax, snaps=i,
+                                                       read_type=0)
+    S = coeff[0]
+    T = coeff[1]
+    SS = coeff[2]
+    TT = coeff[3]
+    ST = coeff[4]
+    S_smooth, T_smooth, N_coeff = coefficients_smoothing.smooth_coeff_matrix(S, T, SS, TT, ST, mass,
+                                                                             nmax, lmax, lmax,
+                                                                             sn)
+    return S_smooth, T_smooth, N_coeff
 
 def rho_square(i, sn):
     """
@@ -121,23 +162,11 @@ def rho_square(i, sn):
     in each particle batch i. 
 
     """
-
-    path = '/home/xzk/work/github/MW-LMC-SCF/code/KL/data/'
-    filename = 'coeff_MW_100M_b1_dm_part_1e6_300'
-    mass = 1/1E5
-    #mass = 1.577212515257997438e-05
-    coeff = coefficients_smoothing.read_coeffcov_matrix(path+filename,
-                                                       1, nmax, lmax, lmax, i,
-                                                       read_type=0)
-    S = coeff[0]
-    SS = coeff[2]
-    T = coeff[1]
-    TT = coeff[3]
-    ST = coeff[4]
-    S_smooth, T_smooth, N_coeff = coefficients_smoothing.smooth_coeff_matrix(S, T, SS, TT, ST, mass,
-                                                                             nmax,lmax, lmax, sn_range[sn])
-    
+    print(i, int(sn), sn_range[int(sn)], 'here in rho square')
+    S_smooth, T_smooth, N = get_coefficients(i, sn_range[int(sn)]) 
+    print('1. -- here all good --')
     rho2 = coefficients_sum(S_smooth, T_smooth, nmax, lmax, rs)
+    print('2. -- here all good --')
     return rho2
     
 def sum_rho_true(i, sn):
@@ -149,53 +178,53 @@ def sum_rho_true(i, sn):
 
     """
 
-    rho = np.loadtxt(densities_file+'_{:0>3d}_sn_{:0>3d}.txt'.format(i, sn))
+    #rho = np.loadtxt(densities_file+'rho_batch_{:0>3d}.txt'.format(i))
     rho_true = np.zeros(nbatches-1)
     k=0
-    mass = 1/1000
+    #mass = 1/1000
     for j in range(nbatches):
       if i!=j:
-        rho_true[k] = np.sum(mass*rho[:,j])
+        rho = np.loadtxt(densities_file+'rho_batch_{:0>3d}.txt'.format(i))
+        rho_true[k] = np.sum(mass*rho[:,sn])
         k+=1
     return np.sum(rho_true)/(nbatches-1)
 
 def Likelihood(sn):
     L = np.zeros(nbatches)
     L2 = np.zeros(nbatches)
+    L1 = np.zeros(nbatches)
     print('This is sn {}'.format(sn))
     #1 = 0
-    L1 = rho_square(0, sn)
-    #for i in range(nbatches):
-        #L1 =  rho_square(i, sn)
-        #ho_true = sum_rho_true(i, sn)
-        #2[i] = -2 * rho_true 
-        #[i] = L1 + L2[i]
+    #L1 = rho_square(0, sn_range[sn])
+    for i in range(nbatches):
+        print("n-batches = ",i, sn, sn_range[int(sn)])
+        L1[i] = rho_square(i, sn_range[int(sn)])
+        #rho_true = sum_rho_true(i, sn)
+        #L2[i] = -2 * rho_true 
+        L[i] = L1[i]#L2[i]#L1 + L2[i]
     print('Done with batches of sn {}'.format(sn))
 
-    return  L1
-
-
-def coeff_rand_generator(order):
-        # generates random coefficients with different orders
-    S = np.random.random((order, order, order))
-    T = np.random.random((order, order, order))
-    return S, T
-
+    return  L
 
 
 if __name__ == "__main__":
     #densities_file = "/extra/jngaravitoc/KL_data/MW_100M_b1_dm_part_1e6_300_KL_analysis_batch"
-    #ensities_file='/rsgrps/gbeslastudents/nicolas/KL_data/MW_100M_b1_dm_part_1e6_300_KL_analysis_batch'
-    file_name = "/home/xzk/work/github/MW-LMC-SCF/code/KL/data/gof_rho_true.txt"
-    npart = 1000
-    #ass = 1 / npart
-    nbatches = 100
+    #densities_file='/rsgrps/gbeslastudents/nicolas/KL_data/MW_100M_b1_dm_part_1e6_300_KL_analysis_batch'
+    #densities_file='/rsgrps/gbeslastudents/nicolas/KL_data/MW_100M_b1_dm_part_1e6_300_KL_analysis_batch'
+    #file_name = "/home/xzk/work/github/MW-LMC-SCF/code/KL/data/gof_rho_true.txt"
+    densities_file='/home/xzk/work/github/MW-LMC-SCF/code/KL/test_coeff_MW_100M_b1_dm_part_1e6_300__'
+    #file_name = "/home/xzk/work/github/MW-LMC-SCF/code/KL/data/1st_term_gof.txt"
+    file_name = "/home/xzk/work/github/MW-LMC-SCF/code/KL/data/2nd_term_gof.txt"
+    npart = 2000
+    mass = 1 / npart
+    
+    nbatches = 50#100
     sn_range = np.arange(0, 11, 0.2)
-    num_cores = 13
+    num_cores = 2
     nmax = 20
     lmax = 5
     rs = 40.85
-    output = Parallel(n_jobs=num_cores)(delayed(Likelihood)(sn) for sn in range(4, 50))
+    output = Parallel(n_jobs=num_cores)(delayed(Likelihood)(sn) for sn in range(0, 56))
     #print(output)
     write_output(file_name, output)
     
