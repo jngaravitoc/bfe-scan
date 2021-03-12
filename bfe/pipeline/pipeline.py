@@ -20,6 +20,7 @@ import bfe.ios.gadget_to_ascii as g2a
 import bfe.ios.io_snaps as ios
 import bfe.coefficients.parallel_coefficients as cop
 import allvars
+from   bfe.ios.com import re_center
 
 from argparse import ArgumentParser
 from quick_viz_check import scatter_plot
@@ -81,6 +82,7 @@ if __name__ == "__main__":
             out_log.write("loading snap {}{} \n".format(snapname, i))
 
             # *********************** Loading data: **************************
+            
             if ((HostBFE == 1) | (HostSatUnboundBFE == 1)):
                 out_log.write("reading host particles")
                 halo = ios.read_snap_coordinates(
@@ -125,6 +127,8 @@ if __name__ == "__main__":
                         in_path, snapname+"_{:03d}".format(i),
                         n_halo_part, com_frame='sat', galaxy='sat')
 
+                rcom_sat = satellite[5]
+                vcom_sat = satellite[6]
                 pos_sat_tr, vel_sat_tr, mass_sat_tr, ids_sat_tr\
                         = g2a.truncate_halo(
                                 satellite[0], satellite[1], satellite[3],
@@ -197,7 +201,7 @@ if __name__ == "__main__":
                 pos_unbound = armadillo[3]
                 vel_unbound = armadillo[4]
                 ids_unbound = armadillo[5]
-                rs_opt = armadillo[6]
+                #rs_opt = armadillo[6]
                 # mass arrays of bound and unbound particles
                 N_part_bound = len(ids_bound)
                 N_part_unbound = len(ids_unbound)
@@ -226,7 +230,10 @@ if __name__ == "__main__":
                     processes=args.n_cores)
                 out_log.write("Computing Host & satellite debris potential \n")
                 # 'Combining satellite unbound particles with host particles')
-                pos_host_sat = np.vstack((pos_halo_tr, pos_unbound))
+                # recenter back satellite unbound particles to MW' COM
+                pos_unbound_mw_frame  = re_center(pos_unbound, -rcom_sat)
+
+                pos_host_sat = np.vstack((pos_halo_tr, pos_unbound_mw_frame))
                 # TODO : Check mass array?
                 mass_Host_Debris = np.hstack((mass_tr, mass_unbound_array))
                 halo_debris_coeff = cop.Coeff_parallel(
