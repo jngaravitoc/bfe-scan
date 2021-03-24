@@ -138,14 +138,13 @@ def compute_scf_pot(pos, rs, nmax, lmax, mass, ncores, npart_sample):
 def bound_particles(pot, pos, vel, ids, rcut=5):
     """
     Find bound particles
-    TODO: Make rcut input paramter
     """
     vmag_lmc = np.sqrt(np.sum(vel**2, axis=1))
     T = vmag_lmc**2/2
     V = pot
     r = np.sqrt(np.sum(pos**2, axis=1))
-    lmc_bound = np.where((T+V<=0) | (r<=rcut))[0]
-    lmc_unbound = np.where((T+V>0) & (r>rcut))[0]
+    lmc_bound = np.where((2*T+V<=0) | (r<=rcut))[0]
+    lmc_unbound = np.where((2*T+V>0) & (r>rcut))[0]
     del(T, V, vmag_lmc, r)
 
     return pos[lmc_bound], vel[lmc_bound], ids[lmc_bound], pos[lmc_unbound], vel[lmc_unbound], ids[lmc_unbound]
@@ -157,11 +156,9 @@ def find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax, ncores, npart_samp
     mass : particle mass array
     """
     N_init = len(pos)
-    #path_temp = '/home/u9/jngaravitoc/codes/BFE_run_scripts/MWLMC6/'
     pot, rs_opt = compute_scf_pot(pos, rs, nmax, lmax, mass, ncores, npart_sample)
     pos_bound, vel_bound, ids_bound, pos_unbound, vel_unbound, ids_unbound = bound_particles(pot, pos, vel, ids)
     N_bound = len(ids_bound)
-    #np.savetxt(path_temp +'bound_particles_iteration_init_{:0>2d}.txt'.format(0), pos_bound, header=str(rs_opt))
     mp = mass[0]
     del(pos)
     del(vel)
@@ -186,8 +183,6 @@ def find_bound_particles(pos, vel, mass, ids, rs, nmax, lmax, ncores, npart_samp
         vel_unbound = np.vstack((vel_unbound, v_unb))
         ids_unbound = np.hstack((ids_unbound, ids_unb))
         
-        #np.savetxt(path_temp +
-        #    'bound_particles_iteration_init_{:0>2d}.txt'.format(i-1), pos_bound, header=str(rs_opt))
         del(p_unb)
         del(v_unb)
         del(ids_unb)
