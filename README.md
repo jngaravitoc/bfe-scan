@@ -1,5 +1,5 @@
 # Basis Field Expansions Explorer
-BFEE is a python package specialized in analyzing snapshots from N-body simulations using Basis Field Expansions (BFE).
+BFEE is a python package specialized in analyzing snapshots from N-body simulations using Basis Function Expansions (BFE).
 
 # Features: 
   - Compute BFE expansion from a collection of snapshots
