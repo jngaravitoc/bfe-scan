@@ -5,10 +5,10 @@ is a python code that computes BFE expansion in idealized n-body simulations
 it works in parallel using multiprocessing.
 
 Pipeline to generate ascii files of the MW particles, LMC bound particles and
-MW+LMC unbound particles
+MW--LMC unbound particles
 
 author: github/jngaravitoc
-12/2019
+12/2019 - 
 
 """
 
@@ -23,7 +23,7 @@ import allvars
 from   bfe.ios.com import re_center
 
 from argparse import ArgumentParser
-from quick_viz_check import scatter_plot
+from quick_viz_check import scatter_plot, density_plot
 
 
 if __name__ == "__main__":
@@ -118,6 +118,7 @@ if __name__ == "__main__":
                             = g2a.sample_halo(
                                     pos_halo_tr, vel_halo_tr,
                                     mass_tr, npart_sample, ids_tr)
+                out_log.write("Host halo particle mass {} \n".format(mass_tr[0]))
 
             # Truncating satellite for BFE computation
             if ((SatBFE == 1) | (HostSatUnboundBFE == 1)):
@@ -141,7 +142,7 @@ if __name__ == "__main__":
                                     pos_sat_tr, vel_sat_tr, ids_sat_tr,
                                     mass_sat_tr[0], mass_tr[0])
 
-                    assert np.abs(mass_sat_em[0]/mass_tr[0]-1) < 1E-3,\
+                    assert np.abs((mass_sat_em[0]/mass_tr[0])-1) < 1E-3,\
                             'Error: particle mass of satellite different to particle mass of the halo'
 
                 if npart_sample_satellite > 0:
@@ -179,7 +180,8 @@ if __name__ == "__main__":
     
             if ((SatBFE == 1) & (SatBoundParticles == 1)):
                 out_log.write("Computing satellite bound particles!\n")
-
+                
+                # *** Compute satellite bound paticles ***
                 armadillo = lmcb.find_bound_particles(
                         pos_sat_em, vel_sat_em, mass_sat_em, ids_sat_em, 
                         sat_rs, nmax_sat, lmax_sat, ncores,
@@ -207,7 +209,7 @@ if __name__ == "__main__":
                 N_part_unbound = len(ids_unbound)
                 mass_bound_array = np.ones(N_part_bound)*mass_sat_em[0]
                 mass_unbound_array = np.ones(N_part_unbound)*mass_sat_em[0]
-                
+                out_log.write("Satellite particle mass {}\n".format(mass_sat_em[0]))    
                 # Mass bound fractions
                 Mass_bound = (N_part_bound/len(ids_sat_em))*np.sum(mass_sat_em)
                 Mass_unbound = (N_part_unbound/len(ids_sat_em))*np.sum(mass_sat_em)
@@ -218,8 +220,11 @@ if __name__ == "__main__":
 
                 if plot_scatter_sample == 1:
                     out_log.write("plotting scatter plots of unbound and bound satellite particles \n")
-                    scatter_plot(outpath+snapname+"_unbound_sat_{:03d}".format(i), pos_unbound)
-                    scatter_plot(outpath+snapname+"_bound_sat_{:03d}".format(i), pos_bound)
+                    scatter_plot(outpath+snapname+"_unbound_sat_{:03d}_nmax_{}".format(i, nmax_sat), pos_unbound)
+                    scatter_plot(outpath+snapname+"_bound_sat_{:03d}_nmax{}".format(i, nmax_sat), pos_bound)
+                    density_plot(outpath+snapname+"_density_unbound_sat_{:03d}_nmax{}".format(i, nmax_sat), pos_unbound)
+                    density_plot(outpath+snapname+"_density_bound_sat_{:03d}_nmax{}".format(i, nmax_sat), pos_bound)
+                
                 
                 if out_ids_bound_unbound_sat == 1:
                     out_log.write("writing satellite bound id \n")
@@ -231,14 +236,27 @@ if __name__ == "__main__":
                 out_log.write("Computing Host & satellite debris potential \n")
                 # 'Combining satellite unbound particles with host particles')
                 # recenter back satellite unbound particles to MW' COM
-                pos_unbound_mw_frame  = re_center(pos_unbound, -rcom_sat)
+                pos_unbound_mw_frame = re_center(pos_unbound, -rcom_sat)
+                
+                #density_plot(outpath+snapname+"_unbound_mw_frame_{:03d}.png".format(i), 
+                #             pos_unbound_mw_frame)
+
+                #density_plot(outpath+snapname+"_unbound_lmc_frame_{:03d}.png".format(i), 
+                #             pos_unbound)
 
                 pos_host_sat = np.vstack((pos_halo_tr, pos_unbound_mw_frame))
                 # TODO : Check mass array?
+                density_plot(outpath+snapname+"_unbound_mw_lmc_frame_{:03d}.png".format(i), 
+                             pos_host_sat)
                 mass_Host_Debris = np.hstack((mass_tr, mass_unbound_array))
+                np.savetxt(outpath+snapname+"halo_particles_{:03d}.txt".format(i), pos_halo_tr)
+                np.savetxt(outpath+snapname+"debris_particles_{:03d}.txt".format(i), pos_unbound_mw_frame)
+                #out_log.write("Debris_mass=" mass_unbound_array[0])
+                #out_log.write("Halo_mass=" mass_tr[0])
+
                 halo_debris_coeff = cop.Coeff_parallel(
                         pos_host_sat, mass_Host_Debris, rs, True, nmax, lmax)
-
+            
                 results_BFE_halo_debris = halo_debris_coeff.main(pool_host_sat)
                 out_log.write("Done computing Host & satellite debris potential")
                 ios.write_coefficients(
