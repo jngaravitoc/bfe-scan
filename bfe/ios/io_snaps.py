@@ -188,7 +188,7 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='MW', galaxy='MW'):
     
 
 
-def write_coefficients(filename, results, nmax, lmax, r_s, mass, rcom , vcom):
+def write_coefficients(filename, results, nmax, lmax, r_s, mass, rcom ,vcom):
     """
     Coefficients file format.
     """
