@@ -11,7 +11,7 @@ import schwimmbad
 import sys
 from scipy import special
 import math
-import time 
+import time
 
 class PBFEpot:
     def __init__(self, pos, S, T, rs, nmax, lmax, G, M):
@@ -24,20 +24,20 @@ class PBFEpot:
                          with the arguments that are going to run in parallel.
             main         Runs potential in parallel using a pool to be defined
                          by the user.
-        
+
         Parameters:
         -----------
-        pos : numpy.ndarray with shape 
+        pos : numpy.ndarray with shape
         S : numpy.ndarray
-        T : numpy.ndarray 
+        T : numpy.ndarray
         rs : float
             Hernquist halo scale length
-        nmax : int 
+        nmax : int
             nmax in the expansion
-        lmax : int 
-            lmax in the expansion 
+        lmax : int
+            lmax in the expansion
         G : float
-            Value of the gravitational constant 
+            Value of the gravitational constant
         M : float
             Total mass of the halo (M=1) if the masses
             of each particle where already used for computing the
@@ -48,17 +48,17 @@ class PBFEpot:
         self.rs = rs
         self.nmax = nmax
         self.lmax = lmax
-        self.r = (self.pos[:,0]**2 + self.pos[:,1]**2 + self.pos[:,2]**2)**0.5 
+        self.r = (self.pos[:,0]**2 + self.pos[:,1]**2 + self.pos[:,2]**2)**0.5
         self.theta = np.arccos(self.pos[:,2]/self.r) # cos(theta)
 
-        self.phi = np.arctan2(self.pos[:,1], self.pos[:,0]) 
+        self.phi = np.arctan2(self.pos[:,1], self.pos[:,0])
         self.s = self.r/self.rs
         self.G = G
         self.M = M
         self.S = S
         self.T = T
         self.nparticles = len(self.s)
-        
+
     def nlm_list(self, ncoeff, nmax, lmax):
         n_list = np.zeros(ncoeff)
         l_list = np.zeros(ncoeff)
@@ -67,7 +67,7 @@ class PBFEpot:
         for n in range(nmax+1):
             for l in range(lmax+1):
                 for m in range(l+1):
-                    n_list[i] = n 
+                    n_list[i] = n
                     l_list[i] = l
                     m_list[i] = m
                     i+=1
@@ -75,7 +75,7 @@ class PBFEpot:
 
     def bfe_pot(self, n, l, m, s, theta):
         #r, theta, phi = spherical_coordinates(pos)
-    
+
         phi_l = -s**l * (1+s)**(-2*l-1)
         #phi_nlm = special.eval_gegenbauer(n, 2*l+1.5, (s-1)/(s+1)) * special.sph_harm(m, l, 0, theta)
         phi_nlm = special.eval_gegenbauer(n, 2*l+1.5, ((s-1)/(s+1))) * special.lpmv(m, l, np.cos(theta))
@@ -84,7 +84,7 @@ class PBFEpot:
         #factor = 1#(4*np.pi)**0.5
         return  factor*phi_l*phi_nlm #np.sqrt(4*np.pi)
 
-    
+
     def potential(self, task):
         #s, phi, theta = task
         #nlist, llist, mlist = self.nlm_list(len(self.S), self.nmax, self.lmax)
@@ -94,25 +94,42 @@ class PBFEpot:
         pot = self.bfe_pot(nlist, llist, mlist, self.s, self.theta)\
                 * (S*np.cos(mlist*self.phi)+T*np.sin(mlist*self.phi))
         return pot*self.G*self.M/self.rs
-    
+
     def bfe_rho(self, n, l, m, s, theta):
-        # Eq 10 in Lowing+2011
-    
-        rho_l = s**(l-1) * (1+s)**(-2*l-3) 
+        # Eq 10 in Lowing+11
+
+        rho_l = s**(l-1) * (1+s)**(-2*l-3)
         rho_nlm = special.eval_gegenbauer(n, 2*l+1.5, ((s-1)/(s+1))) * special.lpmv(m, l, np.cos(theta))
         factor = ((2*l+1) * math.factorial(l-m)/math.factorial(l+m))**0.5
         #factor=1
         Knl = 0.5*n*(n+4*l+3) + (l+1)*(2*l+1)
         return  factor*Knl*rho_l*phi_nlm/(2*np.pi)
 
-    
+    def d_phi(self, n, l, m):
+        """
+        TODO: Add all the .self
+        """
+        factor = np.sqrt(4*np.pi)
+        A_factor = (-l-3*l*self.s-self.s)
+        A = self.s**(l-1)/(1+self.s)**(2*l+2) * special.eval_gegenbauer(n, 2*l+1.5, ((self.s-1)/(self.s+1))
+        B_factor = -4*(2*l+3/2.)
+        B = self.s**l/(1+self.s)**(2*l+3) * special.eval_gegenbauer(n-1, 2*l+2.5, ((self.s-1)/(self.s+1))
+        d_phi_dr = factor * ( A_factor*A + B_factor*B) * special.lpmv(m, l, np.cos(self.theta))
+        d_phi_dtheta = m*np.cot(self.theta)*np.sqrt()
+
+    def acceleration(self, n, l, m, s, theta):
+        # Computes bfe accelerations Eqn: 17-19 in Lowing+11
+
+        special.lpmv(m, l, np.cos(theta))
+        return 0
+
     def density(self, task):
         # Eq 13 in Lowing+2011
         nlist, llist, mlist, S, T = task
         rho = self.bfe_rho(nlist, llist, mlist, self.s, self.theta)\
                 * (S*np.cos(mlist*self.phi)+T*np.sin(mlist*self.phi))
         return rho*self.M/self.rs
-    
+
     def main(self, pool):
         nlist, llist, mlist = self.nlm_list(len(self.S), self.nmax, self.lmax)
         #rint(self.S, self.T)

@@ -1,28 +1,30 @@
 ---
-inpath : "/rsgrps/gbeslastudents/nicolas/MWLMC_sims/100M/fidutials/MWLMC5_b1/"
+#inpath : "/rsgrps/gbeslastudents/nicolas/MWLMC_sims/100M/fidutials/MWLMC5_b1/"
+inpath : "/home/ngc/Work/research/MW_anisotropy/code/test_snaps/"
 snapname : "MWLMC5_100M_new_b1"
-outpath : "/rsgrps/gbeslastudents/nicolas/MWLMC_sims/BFE/MW/MWLMC5/"
-outname : "BFE MWLMC5_b1"
+#outpath : "/rsgrps/gbeslastudents/nicolas/MWLMC_sims/BFE/MW/MWLMC5/"
+outpath : "/home/ngc/Work/research/MW_anisotropy/code/test_snaps/"
+outname : "BFE_MWLMC5_b1"
 npartHalo : 100000000
-samplePart : 70000000
+samplePart : 700000
 nmax : 10
 lmax : 5
 rs : 40.85 
 ncores : 4
 mpi : 1
 rhaloCut : 400
-initSnap : 90
-finalSnap : 91
+initSnap : 110
+finalSnap : 111
 SatBFE : 1
-Satrs : 10
-nmaxSat : 15
-lmaxSat : 5
-HostBFE : 0
+Satrs : 20
+nmaxSat : 20
+lmaxSat : 20
+HostBFE : 1
 SatBoundParticles : 1
-HostSatUnboundPart : 0
+HostSatUnboundPart : 1
 WriteSnapsAscii : 0
 OutIdsBoundUnbound : 1
-PlotScatterSample : 1 
-samplePartSat : 500000
+PlotScatterSample : 0 
+samplePartSat : 50000
 ...
 
