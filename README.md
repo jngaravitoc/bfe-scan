@@ -1,4 +1,18 @@
-# Basis Field Expansions Explorer
+# Basis Functions Expansions in Python (BFE-py) 
+
+          __                __              __                       __      __       __    
+         / /\              /\ \            /\ \                     /\ \    /\ \     /\_\   
+        / /  \            /  \ \          /  \ \                   /  \ \   \ \ \   / / /   
+       / / /\ \          / /\ \ \        / /\ \ \                 / /\ \ \   \ \ \_/ / /    
+      / / /\ \ \        / / /\ \_\      / / /\ \_\   ____        / / /\ \_\   \ \___/ /     
+     / / /\ \_\ \      / /_/_ \/_/     / /_/_ \/_/ /\____/\     / / /_/ / /    \ \ \_/      
+    / / /\ \ \___\    / /____/\       / /____/\    \/____\/    / / /__\/ /      \ \ \       
+   / / /  \ \ \__/   / /\____\/      / /\____\/               / / /_____/        \ \ \    
+  / / /____\_\ \    / / /           / / /______              / / /                \ \ \     
+ / / /__________\  / / /           / / /_______\            / / /                  \ \_\    
+ \/_____________/  \/_/            \/__________/            \/_/                    \/_/  
+
+
 BFE-py is a python package specialized in analyzing snapshots from N-body simulations using Basis Function Expansions (BFE).
 
 # Features: 
@@ -29,10 +43,12 @@ BFE-py is a python package specialized in analyzing snapshots from N-body simula
       - Make different parameter categories for Host and Satellites.
       - Generalize to multiple satellites.
       - Read COM if provided
+      - Remove gala dependency 
 
   - Optional outputs:
       - track bound mass fraction
       - write output on Gadget format file
+   
    - Implement tests
    - Parallelization:
         - Try parallel structure discussed in articles.adsabs.harvard.edu/pdf/1995ApJ...446..717H
@@ -49,13 +65,13 @@ BFE-py is a python package specialized in analyzing snapshots from N-body simula
 
 # dependencies:
 
-  - pyyaml (parameter file )
+  - pyyaml (parameter file format)
   - scipy
   - numpy
   - gala
-  - schwimmbad
-  - openmp
-  - pygadgetreader
+  - schwimmbad (python parallelization)
+  - openmp 
+  - pygadgetreader (to read old gadget formats 1/2/3)
 
 
 # Installation:
