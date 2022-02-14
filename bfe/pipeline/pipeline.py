@@ -1,10 +1,10 @@
 #!/usr/bin/env python3.8
 """
 bfe-py 
-is a python code that computes BFE expansion in idealized n-body simulations
-it works in parallel using multiprocessing.
+is a python code that computes BFE Hernquist expansion in idealized n-body simulations 
+it works in parallel using python  multiprocessing.
 
-Pipeline to generate ascii files of the MW particles, LMC bound particles and
+Pipeline to generate ascii files of the host particles, satellite bound particles and
 MW--LMC unbound particles
 
 author: github/jngaravitoc
@@ -20,11 +20,26 @@ import bfe.ios.gadget_to_ascii as g2a
 import bfe.ios.io_snaps as ios
 import bfe.coefficients.parallel_coefficients as cop
 import allvars
-from   bfe.ios.com import re_center
+from bfe.ios.com import re_center
 
 from argparse import ArgumentParser
 from quick_viz_check import scatter_plot, density_plot
 
+
+def welcome_logo():
+    print("         __                __              __                       __      __       __    ") 
+    print("        / /\              /\ \            /\ \                     /\ \    /\ \     /\_\   ")
+    print("       / /  \            /  \ \          /  \ \                   /  \ \   \ \ \   / / /   ")
+    print("      / / /\ \          / /\ \ \        / /\ \ \                 / /\ \ \   \ \ \_/ / /    ")
+    print("     / / /\ \ \        / / /\ \_\      / / /\ \_\   ____        / / /\ \_\   \ \___/ /     ")
+    print("    / / /\ \_\ \      / /_/_ \/_/     / /_/_ \/_/ /\____/\     / / /_/ / /    \ \ \_/      ")
+    print("   / / /\ \ \___\    / /____/\       / /____/\    \/____\/    / / /__\/ /      \ \ \       ")
+    print("  / / /  \ \ \__/   / /\____\/      / /\____\/               / / /_____/        \ \ \      ")
+    print(" / / /____\_\ \    / / /           / / /______              / / /                \ \ \     ")
+    print("/ / /__________\  / / /           / / /_______\            / / /                  \ \_\    ")
+    print("\/_____________/  \/_/            \/__________/            \/_/                    \/_/    \n")
+    print("Hi! This is bfe-py v0.1 running!")
+    return 0
 
 if __name__ == "__main__":
 
@@ -72,9 +87,11 @@ if __name__ == "__main__":
     out_ids_bound_unbound_sat = params[22]
     plot_scatter_sample = params[23]
     npart_sample_satellite = params[24]
+    snapformat = params[25]
     # rcut_sat = params[26]
-   
-
+   	
+	# Printing welcome message
+		
 
     for i in range(init_snap, final_snap):
         with open(outpath+'info.log', 'a') as out_log:
@@ -87,7 +104,7 @@ if __name__ == "__main__":
                 out_log.write("reading host particles")
                 halo = ios.read_snap_coordinates(
                         in_path, snapname+"_{:03d}".format(i),
-                        n_halo_part, com_frame='MW', galaxy='MW')
+                        n_halo_part, com_frame='host', galaxy='host', snapformat=snapformat)
                 rcom_halo = halo[5]
                 vcom_halo = halo[6]
                 # Truncates halo:
@@ -126,7 +143,7 @@ if __name__ == "__main__":
                 
                 satellite = ios.read_snap_coordinates(
                         in_path, snapname+"_{:03d}".format(i),
-                        n_halo_part, com_frame='sat', galaxy='sat')
+                        n_halo_part, com_frame='sat', galaxy='sat', snapformat=snapformat)
 
                 rcom_sat = satellite[5]
                 vcom_sat = satellite[6]

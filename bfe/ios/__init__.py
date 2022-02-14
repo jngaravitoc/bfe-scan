@@ -7,3 +7,4 @@ from .gadget_to_ascii import sample_halo
 from .gadget_to_ascii import npart_satellite
 from .gadget_to_ascii import write_snap_txt
 from .gadget_to_ascii import write_log
+from .gadget_reader import read_snap

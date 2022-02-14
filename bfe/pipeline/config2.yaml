@@ -26,5 +26,6 @@ WriteSnapsAscii : 0
 OutIdsBoundUnbound : 1
 PlotScatterSample : 0 
 samplePartSat : 50000
+snapformat : 1
 ...
 

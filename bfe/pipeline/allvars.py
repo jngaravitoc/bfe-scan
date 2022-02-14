@@ -30,6 +30,7 @@ def readparams(paramfile):
     out_ids_bound_unbound_sat = d["OutIdsBoundUnbound"]
     plot_scatter_sample = d["PlotScatterSample"]
     samplePartSat = d["samplePartSat"]
+    snapformat = d["snapformat"]
 
     assert type(inpath)==str, "inpath parameter  must be a string"
     assert type(snapname)==str, "snapname parameter must be a string"
@@ -47,10 +48,11 @@ def readparams(paramfile):
     assert type(initSnap)==int, "initSnap parameter must be an integer"
     assert type(finalSnap)==int, "finalSnap parameter must be an integer"
     assert type(SatBFE)==int, "SatBFE parameter must be an integer"
-
+    assert type(snapformat)==int, "snap format must be an integer 0, 1, 2"
+    assert snapformat <= 3, "snap format must be an integer 0, 1, 2"
     return [inpath, snapname, outpath, outname, npartHalo, samplePart, nmax,
             lmax, rs, ncores, mpi, rhaloCut, initSnap, finalSnap, SatBFE,
             sat_rs, nmax_sat, lmax_sat, HostBFE, SatBoundParticles,
             HostSatUnboundPart, write_snaps_ascii, out_ids_bound_unbound_sat, 
-            plot_scatter_sample, samplePartSat]
+            plot_scatter_sample, samplePartSat, snapformat]
 

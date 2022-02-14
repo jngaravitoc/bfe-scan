@@ -35,8 +35,6 @@ class Coeff_parallel(object):
                     nlm.append((n,l,m))                 
         return nlm
                                                                                             
-
-
     def compute_coeffs_discrete_parallel(self, task):
         n, l, m = task
         S, T = STnlm_discrete(self.s, self.phi, self.X, self.mass, n, l, m)
