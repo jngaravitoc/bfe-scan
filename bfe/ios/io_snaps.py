@@ -1,4 +1,5 @@
 import numpy as np
+import h5py
 from bfe.ios.read_snap import load_snapshot as readsnap
 from bfe.ios.gadget_reader import is_parttype_in_file
 
@@ -230,3 +231,47 @@ def write_coefficients(filename, results, nmax, lmax, r_s, mass, rcom ,vcom):
     header = ' nmax: {:d} \n lmax: {:d} \n r_s: {:3.2f} \n particle_mass: {:10.3e} \n rcom: {} \n vcom: {}'.format(nmax, lmax, r_s, mass, rcom, vcom)
 
     np.savetxt(filename, data, header=header)
+
+def write_coefficients_hdf5(filename, results, nmax, lmax, mmax, r_s, mass, rcom, G):
+    """
+    Write coefficients into an hdf5 file
+
+    """
+    ndim = np.shape(results)[1]
+
+    hf = h5py.File(filename + ".hdf5", 'w')
+    hf.create_dataset('Snlm', data=results[0], shape=(nmax+1, lmax+1, mmax+1))
+    hf.create_dataset('Tnlm', data=results[1], shape=(nmax+1, lmax+1, mmax+1))
+    hf.create_dataset('rcom', data=rcom, shape=(1, 3))
+    hf.create_dataset('nmax', data=nmax)
+    hf.create_dataset('lmax', data=lmax)
+    hf.create_dataset('mmax', data=mmax)
+    hf.create_dataset('rs', data=r_s)
+    hf.create_dataset('pmass', data=mass)
+    hf.create_dataset('G', data=G)
+    if ndim == 5:
+        hf.create_dataset('var_Snlm', data=results[2], shape=(nmax+1, lmax+1, mmax+1))
+        hf.create_dataset('var_Tnlm', data=results[3], shape=(nmax+1, lmax+1, mmax+1))
+        hf.create_dataset('var_STnlm', data=results[4], shape=(nmax+1, lmax+1, mmax+1))
+    hf.close()
+
+
+def read_coefficients(filename):
+    """
+    Write coefficients into an hdf5 file
+
+    """
+    hf=h5py.File(filename + ".hdf5", 'r')
+    print(hf.keys())
+    print("* Loading coefficients")
+    Snlm = np.array(hf.get('Snlm'))
+    Tnlm = np.array(hf.get('Tnlm'))
+    nmax = np.array(hf.get('nmax'))
+    lmax = np.array(hf.get('lmax'))
+    mmax = np.array(hf.get('mmax'))
+    rs = np.array(hf.get('rs'))
+    pmass = np.array(hf.get('pmass'))
+    G = np.array(hf.get('G'))
+    rcom = np.array(hf.get('rcom'))
+    hf.close()
+    return [Snlm, Tnlm], [nmax, lmax, mmax], [rs, pmass, G], rcom
