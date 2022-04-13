@@ -4,7 +4,7 @@ bfe-py
 is a python code that computes BFE Hernquist expansion in idealized n-body simulations 
 it works in parallel using python  multiprocessing.
 
-Pipeline to generate ascii files of the host particles, satellite bound particles and
+This pipeline generates hdf5 files of the host particles, satellite bound particles and
 MW--LMC unbound particles
 
 author: github/jngaravitoc
@@ -70,26 +70,28 @@ if __name__ == "__main__":
     npart_sample = params[5]
     nmax = params[6]
     lmax = params[7]
-    rs = params[8]
-    ncores = params[9]
-    mpi = params[10]
-    rcut_halo = params[11]
-    init_snap = params[12]
-    final_snap = params[13]
-    SatBFE = params[14]
-    sat_rs = params[15]
-    nmax_sat = params[16]
-    lmax_sat = params[17]
-    HostBFE = params[18]
-    SatBoundParticles = params[19]
-    HostSatUnboundBFE = params[20]
-    write_snaps_ascii = params[21]
-    out_ids_bound_unbound_sat = params[22]
-    plot_scatter_sample = params[23]
-    npart_sample_satellite = params[24]
-    snapformat = params[25]
+    mmax = params[8]
+    rs = params[9]
+    ncores = params[10]
+    mpi = params[11]
+    rcut_halo = params[12]
+    init_snap = params[13]
+    final_snap = params[14]
+    SatBFE = params[15]
+    sat_rs = params[16]
+    nmax_sat = params[17]
+    lmax_sat = params[18]
+    mmax_sat = params[19]
+    HostBFE = params[20]
+    SatBoundParticles = params[21]
+    HostSatUnboundBFE = params[22]
+    write_snaps_ascii = params[23]
+    out_ids_bound_unbound_sat = params[24]
+    plot_scatter_sample = params[25]
+    npart_sample_satellite = params[26]
+    snapformat = params[27]
     # rcut_sat = params[26]
-   	
+    variance=False
 	# Printing welcome message
 		
 
@@ -276,10 +278,9 @@ if __name__ == "__main__":
             
                 results_BFE_halo_debris = halo_debris_coeff.main(pool_host_sat)
                 out_log.write("Done computing Host & satellite debris potential")
-                ios.write_coefficients(
-                        outpath+out_name+"_host_sat_unbound_snap_{:0>3d}.txt".format(i),
-                        results_BFE_halo_debris, nmax, lmax, rs,
-                        mass_Host_Debris[0], rcom_halo, vcom_halo)
+                ios.write_coefficients_hdf5(
+                        outpath+out_name+"_host_sat_unbound_snap_{:03d}".format(i),
+                        results_BFE_halo_debris, [nmax, lmax, mmax], [rs, mass_Host_Debris[0], 0],  rcom_halo)
             
     
             if HostBFE == 1:
@@ -287,14 +288,14 @@ if __name__ == "__main__":
                     processes=args.n_cores)
                 out_log.write("Computing Host BFE \n")
                 halo_coeff = cop.Coeff_parallel(
-                        pos_halo_tr, mass_tr, rs, True, nmax, lmax)
+                        pos_halo_tr, mass_tr, rs, variance, nmax, lmax)
                 
                 results_BFE_host = halo_coeff.main(pool_host)
-                
+                print(np.shape(results_BFE_host)) 
                 out_log.write("Done computing Host BFE")
-                ios.write_coefficients(
-                        outpath+out_name+"_host_snap_{:0>3d}.txt".format(i),
-                        results_BFE_host, nmax, lmax, rs, mass_tr[0], rcom_halo, vcom_halo)
+                ios.write_coefficients_hdf5(
+                        outpath+out_name+"_host_snap_{:03d}".format(i),
+                        results_BFE_host, [nmax, lmax, mmax], [rs, mass_tr[0], 0],  rcom_halo)
         
 
             if ((SatBFE == 1) & (SatBoundParticles == 1)):
@@ -302,30 +303,30 @@ if __name__ == "__main__":
                 pool_sat = schwimmbad.choose_pool(mpi=args.mpi,
                                                   processes=args.n_cores)
                 sat_coeff = cop.Coeff_parallel(
-                        pos_bound, mass_bound_array, sat_rs, True, nmax_sat, lmax_sat)
+                        pos_bound, mass_bound_array, sat_rs, variance, nmax_sat, lmax_sat)
 
                 results_BFE_sat = sat_coeff.main(pool_sat)
                 out_log.write("Done computing Sat BFE \n")
     
-                ios.write_coefficients(
-                        outpath+out_name+"_sat_bound_snap_{:0>3d}.txt".format(i),
-                        results_BFE_sat, nmax_sat, lmax_sat, sat_rs,
-                        mass_bound_array[0], satellite[5], satellite[6])
+                ios.write_coefficients_hdf5(
+                        outpath+out_name+"_sat_bound_snap_{:03d}.txt".format(i),
+                        results_BFE_sat, [nmax_sat, lmax_sat, mmax_sat], [sat_rs,
+                        mass_bound_array[0], 0], satellite[5])
         
             if ((SatBFE == 1) & (SatBoundParticles == 0)):
                 out_log.write("Computing Sat BFE \n")
                 pool_sat = schwimmbad.choose_pool(mpi=args.mpi,
                                                   processes=args.n_cores)
                 sat_coeff = cop.Coeff_parallel(
-                        pos_sat_em, mass_sat_em, sat_rs, True, nmax_sat, lmax_sat)
+                        pos_sat_em, mass_sat_em, sat_rs, variance, nmax_sat, lmax_sat)
 
                 results_BFE_sat = sat_coeff.main(pool_sat)
                 out_log.write("Done computing Sat BFE \n")
     
-                ios.write_coefficients(
-                        outpath+out_name+"_sat_snap_{:0>3d}.txt".format(i),
-                        results_BFE_sat, nmax_sat, lmax_sat, sat_rs,
-                        mass_sat_em[0], satellite[5], satellite[6])
+                ios.write_coefficients_hdf5(
+                        outpath+out_name+"_sat_snap_{:03d}".format(i),
+                        results_BFE_sat, [lmax_sat, lmax_sat, mmax_sat], [sat_rs,
+                        mass_sat_em[0], 0], satellite[5])
         
             
     

@@ -2,8 +2,19 @@ import numpy as np
 import h5py
 from bfe.ios.read_snap import load_snapshot as readsnap
 from bfe.ios.gadget_reader import is_parttype_in_file
-
 import bfe.ios.com as com
+from pynbody.analysis._com import shrink_sphere_center as ssc
+
+def reshape_matrix(matrix, nmax, lmax, mmax):
+    col_matrix = np.zeros((nmax+1, lmax+1, mmax+1))
+    counter = 0
+    for n in range(nmax+1):
+        for l in range(lmax+1):
+            for m in range(0, l+1):
+                col_matrix[n][l][m] = matrix[counter]
+                counter +=1
+    return col_matrix
+
 
 def host_particles(xyz, vxyz, pids, pot, mass, N_host_particles):
     """
@@ -102,7 +113,7 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='host', galaxy='hos
         disk_particles = is_parttype_in_file(path+snap+".hdf5", 'PartType2')
 
         if disk_particles == True:
-            print("Computing host COM with partype: {}".format("PartType2"))
+            print("* Computing host COM using minimum of the disk potential with partype: {}".format("PartType2"))
             pos_disk = readsnap(path+snap, snapformat,  'pos', 'disk')
             vel_disk = readsnap(path+snap, snapformat,  'vel', 'disk')
             pot_disk = readsnap(path+snap, snapformat, 'pot', 'disk')
@@ -111,10 +122,12 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='host', galaxy='hos
             del vel_disk
             del pot_disk
         else:
-            print("Computing host COM using shrinking sphere in  partype: {}".format("PartType1"))
-            pos_cm, vel_cm = com.shrinking_sphere(pos, vel, mass)
-            #print("Computing host COM using simple COM in  partype: {}".format("PartType1"))
-            #pos_cm, vel_cm = com.com(pos, vel, mass)
+            print("* Computing host COM using shrinking sphere in  partype: {}".format("PartType1"))
+            pos_cm = ssc(np.ascontiguousarray(pos, dtype=float), np.ascontiguousarray(mass, dtype=float), min_particles=1000, shrink_factor=0.9, starting_rmax=500, num_threads=2)
+            pos_re_center = com.re_center(pos, np.array(pos_cm))
+            vel_cm = com.vcom_in(pos_re_center, vel, mass, rin=5) # TODO make rin value an input parameter? 
+            print("* Done Computing host COM using shrinking sphere in  partype: {}".format("PartType1"))
+
 
     elif com_frame == 'sat':
         print('Computing coordinates in the satellite COM frame')
@@ -149,35 +162,39 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='host', galaxy='hos
             rlmc = np.sqrt(pos_recenter2[:,0]**2 + pos_recenter2[:,1]**2 + pos_recenter2[:,2]**2)
             truncate2 = np.where(rlmc < 50)[0]
             
-            com3 = com.shrinking_sphere(
-                pos_recenter2[truncate2], vel_recenter2[truncate2], 
-                np.ones(len(truncate2))*mass[0])
-            print(com3[0], len(com3[0]))
-            pos_recenter3 = com.re_center(pos_recenter2, com3[0])
-            vel_recenter3 = com.re_center(vel_recenter2, com3[1])
+            #com3 = com.shrinking_sphere(
+            #    pos_recenter2[truncate2], vel_recenter2[truncate2], 
+            #    np.ones(len(truncate2))*mass[0])
             
-            print(com3)
+            com3 = ssc(np.ascontiguousarray(pos_recenter2[truncate2], dtype=float), np.ascontiguousarray(np.ones(len(truncate2))*mass[0], dtype=float), min_particles=1000, shrink_factor=0.9, starting_rmax=500, num_threads=2)
+            pos_recenter2_com = com.re_center(pos_recenter2[truncate2], np.array(com3))
+            vcom3 = com.vcom_in(pos_recenter2_com, vel_recenter2[truncate2], np.ones(len(truncate2))*mass[0], rin=5) # TODO make rin value an input parameter? 
+
+
+            pos_recenter3 = com.re_center(pos_recenter2, np.array(com3))
+            vel_recenter3 = com.re_center(vel_recenter2, vcom3)
+            
             rlmc = np.sqrt(pos_recenter3[:,0]**2 + pos_recenter3[:,1]**2 + pos_recenter3[:,2]**2)
             truncate3 = np.where(rlmc < 20)[0]
             
-            com4 = com.shrinking_sphere(
-                pos_recenter3[truncate3], vel_recenter3[truncate3], 
-                np.ones(len(truncate3))*mass[0])
+            com4 = scc(np.ascontiguousarray(pos_recenter3[truncate3], dtype=float), np.ascontiguousarray(np.ones(len(truncate3))*mass[0], dtype=float), min_particles=1000, shrink_factor=0.9, starting_rmax=500, num_threads=2)
 
+            pos_recenter3_com = com.re_center(pos_recenter3[truncate3], np.array(com4))
+            vcom4 = com.vcom_in(pos_recenter3_com, vel_recenter3[truncate3], np.ones(len(truncate3))*mass[0], rin=5) # TODO make rin value an input parameter? 
             print(com1)
             print(com2)
             print(com3)
             print(com4)
-            pos_cm = com1[0] + com2[0] + com3[0] + com4[0]
-            vel_cm = com1[1] + com2[1] + com3[1] + com4[1]
+            pos_cm = com1[0] + com2[0] + np.array(com3) + np.array(com4)
+            vel_cm = com1[1] + com2[1] + vcom3 + vcom4
             print(pos_cm, vel_cm)
 
     elif com_frame == 'LSR' :
         print('Computing coordinates in the LSR frame')
         if disk_particles == True:
             print("Computing host COM with partype: {}".format("PartType2"))
-            pos_disk = readsnap(path+snap, snapformat,  'pos', 'disk')
-            vel_disk = readsnap(path+snap, snapformat,  'vel', 'disk')
+            pos_disk = readsnap(path+snap, snapformat, 'pos', 'disk')
+            vel_disk = readsnap(path+snap, snapformat, 'vel', 'disk')
             pot_disk = readsnap(path+snap, snapformat, 'pot', 'disk')
             pos_cm, vel_cm = com.com_disk_potential(pos_disk, vel_disk, pot_disk)
             del pos_disk
@@ -232,27 +249,39 @@ def write_coefficients(filename, results, nmax, lmax, r_s, mass, rcom ,vcom):
 
     np.savetxt(filename, data, header=header)
 
-def write_coefficients_hdf5(filename, results, nmax, lmax, mmax, r_s, mass, rcom, G):
+def write_coefficients_hdf5(filename, coefficients, exp_length, exp_constants, rcom):
     """
     Write coefficients into an hdf5 file
 
     """
-    ndim = np.shape(results)[1]
+    ndim = np.shape(coefficients)[1]
+    nmax = exp_length[0]
+    lmax = exp_length[1]
+    mmax = exp_length[2]
+    
+    print("* Writing coefficients in {}".format(filename))
+    
+    rs = exp_constants[0]
+    pmass = exp_constants[1]
+    G = exp_constants[2]
 
     hf = h5py.File(filename + ".hdf5", 'w')
-    hf.create_dataset('Snlm', data=results[0], shape=(nmax+1, lmax+1, mmax+1))
-    hf.create_dataset('Tnlm', data=results[1], shape=(nmax+1, lmax+1, mmax+1))
+    print(coefficients[:,0])
+    S = reshape_matrix(coefficients[:,0], nmax, lmax, mmax)
+    T = reshape_matrix(coefficients[:,1], nmax, lmax, mmax)
+    hf.create_dataset('Snlm', data=S, shape=(nmax+1, lmax+1, mmax+1))
+    hf.create_dataset('Tnlm', data=T, shape=(nmax+1, lmax+1, mmax+1))
     hf.create_dataset('rcom', data=rcom, shape=(1, 3))
     hf.create_dataset('nmax', data=nmax)
     hf.create_dataset('lmax', data=lmax)
     hf.create_dataset('mmax', data=mmax)
-    hf.create_dataset('rs', data=r_s)
-    hf.create_dataset('pmass', data=mass)
+    hf.create_dataset('rs', data=rs)
+    hf.create_dataset('pmass', data=pmass)
     hf.create_dataset('G', data=G)
     if ndim == 5:
-        hf.create_dataset('var_Snlm', data=results[2], shape=(nmax+1, lmax+1, mmax+1))
-        hf.create_dataset('var_Tnlm', data=results[3], shape=(nmax+1, lmax+1, mmax+1))
-        hf.create_dataset('var_STnlm', data=results[4], shape=(nmax+1, lmax+1, mmax+1))
+        hf.create_dataset('var_Snlm', data=coefficients[:,2], shape=(nmax+1, lmax+1, mmax+1))
+        hf.create_dataset('var_Tnlm', data=coefficients[:,3], shape=(nmax+1, lmax+1, mmax+1))
+        hf.create_dataset('var_STnlm', data=coefficients[:,4], shape=(nmax+1, lmax+1, mmax+1))
     hf.close()
 
 
@@ -273,5 +302,16 @@ def read_coefficients(filename):
     pmass = np.array(hf.get('pmass'))
     G = np.array(hf.get('G'))
     rcom = np.array(hf.get('rcom'))
+    coefficients = [Snlm, Tnlm]
+    if 'var_Snlm' in hf.keys():
+        var_Snlm = np.array(hf.get('var_Snlm'))
+        coefficients.append(var_Snlm)
+    elif 'var_Tnlm' in hf.keys():
+        var_Tnlm = np.array(hf.get('var_Tnlm'))
+        coefficients.append(var_Tnlm)
+    elif 'var_STnlm' in hf.keys():
+        var_STnlm = np.array(hf.get('var_STnlm'))
+        coefficients.append(var_STnlm)
     hf.close()
-    return [Snlm, Tnlm], [nmax, lmax, mmax], [rs, pmass, G], rcom
+
+    return coefficients, [nmax, lmax, mmax], [rs, pmass, G], rcom
