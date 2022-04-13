@@ -1,20 +1,6 @@
 import numpy as np
 from numpy import linalg
-
-
-
-## Reading coefficients
-def reshape_matrix(matrix, nmax, lmax, mmax):
-    col_matrix = np.zeros((nmax+1, lmax+1, mmax+1))
-
-
-    counter = 0
-    for n in range(nmax+1):
-        for l in range(lmax+1):
-            for m in range(0, l+1):
-                col_matrix[n][l][m] = matrix[counter]
-                counter +=1
-    return col_matrix
+from bfe.ios import reshape_matrix
 
 
 def read_coeff_matrix(filename, nfiles, n, l, m, n_min=0, n_max=1000, snaps=0):

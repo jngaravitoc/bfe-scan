@@ -127,6 +127,37 @@ def velocities_com(cm_pos, pos, vel, r_cut=20):
     return np.array([velx_cm, vely_cm, velz_cm])
 
 
+def vcom_in(xyz, vxyz, m, rin=5):
+    """
+    Returns the Velocity COM within a given radius rin 
+
+    \vec{R} = \sum_i^N m_i \vec{r_i} / N
+    
+    Paramters:
+    ----------
+    pos : numpy.array
+    vel : numpy.array
+    mass : numpy.array
+    rin : float
+    
+    Returns:
+    --------
+    vcom : numpy.array
+        Velocity center shape(3, 1)
+
+    """
+
+    # Number of particles 
+    mtot = np.sum(m)
+
+
+    dist = np.sqrt(np.sum(xyz**2, axis=1))
+
+    vxCOM = np.sum(vxyz[:,0]*m)/mtot
+    vyCOM = np.sum(vxyz[:,1]*m)/mtot
+    vzCOM = np.sum(vxyz[:,2]*m)/mtot
+
+    return np.array([vxCOM, vyCOM, vzCOM])
 
 def com(xyz, vxyz, m):
     """
@@ -138,16 +169,16 @@ def com(xyz, vxyz, m):
 
 
     # Number of particles 
-    N = sum(m)
+    mtot = np.sum(m)
 
 
-    xCOM = np.sum(xyz[:,0]*m)/N
-    yCOM = np.sum(xyz[:,1]*m)/N
-    zCOM = np.sum(xyz[:,2]*m)/N
+    xCOM = np.sum(xyz[:,0]*m)/mtot
+    yCOM = np.sum(xyz[:,1]*m)/mtot
+    zCOM = np.sum(xyz[:,2]*m)/mtot
 
-    vxCOM = np.sum(vxyz[:,0]*m)/N
-    vyCOM = np.sum(vxyz[:,1]*m)/N
-    vzCOM = np.sum(vxyz[:,2]*m)/N
+    vxCOM = np.sum(vxyz[:,0]*m)/mtot
+    vyCOM = np.sum(vxyz[:,1]*m)/mtot
+    vzCOM = np.sum(vxyz[:,2]*m)/mtot
 
     return np.array([xCOM, yCOM, zCOM]), np.array([vxCOM, vyCOM, vzCOM])
 

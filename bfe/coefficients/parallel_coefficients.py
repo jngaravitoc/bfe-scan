@@ -23,6 +23,7 @@ class Coeff_parallel(object):
         self.X = np.ascontiguousarray(self.pos[:,2] / self.r).astype("float64")
         self.nmax = nmax
         self.lmax = lmax
+        print("* Computing SCF coefficients in parallel")
 
     def nlm_list(self, nmax, lmax):
         """
@@ -99,6 +100,6 @@ if __name__ == "__main__":
     varSnlm = np.ones(len(results[:,0]))
     varTnlm = np.ones(len(results[:,0]))
     varSTnlm = np.ones(len(results[:,0]))
-    
+  
     write_coefficients("test_coefficients.txt", results, nmax, lmax, r_s, mass[0])
 
