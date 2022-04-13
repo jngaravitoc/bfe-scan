@@ -72,6 +72,7 @@ BFE-py is a python package specialized in analyzing snapshots from idealized N-b
   - gala
   - schwimmbad (python parallelization)
   - openmp 
+  - pynbody 
   - pygadgetreader (to read old gadget formats 1/2/3)
 
 
