@@ -78,4 +78,4 @@ BFE-py is a python package specialized in analyzing snapshots from idealized N-b
 
 # Installation:
 
-pyhton -m pip install .
+```pyhton -m pip install .```
