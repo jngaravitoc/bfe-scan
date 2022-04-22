@@ -149,6 +149,7 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='host', galaxy='hos
             pos_recenter = com.re_center(pos1, com1[0])
             vel_recenter = com.re_center(vel1, com1[1])
 
+            # Truncate particles within 200 kpc
             rlmc = np.sqrt(pos_recenter[:,0]**2 + pos_recenter[:,1]**2 +  pos_recenter[:,2]**2)
             truncate = np.where(rlmc < 200)[0]
             
@@ -159,6 +160,7 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='host', galaxy='hos
             pos_recenter2 = com.re_center(pos_recenter, com2[0])
             vel_recenter2 = com.re_center(vel_recenter, com2[1])
 
+            # Truncate particle within 50 kpc
             rlmc = np.sqrt(pos_recenter2[:,0]**2 + pos_recenter2[:,1]**2 + pos_recenter2[:,2]**2)
             truncate2 = np.where(rlmc < 50)[0]
             
@@ -174,17 +176,20 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='host', galaxy='hos
             pos_recenter3 = com.re_center(pos_recenter2, np.array(com3))
             vel_recenter3 = com.re_center(vel_recenter2, vcom3)
             
+            # Truncate within 20 kpc
             rlmc = np.sqrt(pos_recenter3[:,0]**2 + pos_recenter3[:,1]**2 + pos_recenter3[:,2]**2)
             truncate3 = np.where(rlmc < 20)[0]
             
-            com4 = scc(np.ascontiguousarray(pos_recenter3[truncate3], dtype=float), np.ascontiguousarray(np.ones(len(truncate3))*mass[0], dtype=float), min_particles=1000, shrink_factor=0.9, starting_rmax=500, num_threads=2)
+            
+            com4 = ssc(np.ascontiguousarray(pos_recenter3[truncate3], dtype=float), np.ascontiguousarray(np.ones(len(truncate3))*mass[0], dtype=float), min_particles=1000, shrink_factor=0.9, starting_rmax=500, num_threads=2)
 
             pos_recenter3_com = com.re_center(pos_recenter3[truncate3], np.array(com4))
             vcom4 = com.vcom_in(pos_recenter3_com, vel_recenter3[truncate3], np.ones(len(truncate3))*mass[0], rin=5) # TODO make rin value an input parameter? 
-            print(com1)
-            print(com2)
-            print(com3)
-            print(com4)
+            print("Iterative centers:")
+            print("com1: ", com1)
+            print("com2: ", com2)
+            print("com3: ", com3)
+            print("com4: ", com4)
             pos_cm = com1[0] + com2[0] + np.array(com3) + np.array(com4)
             vel_cm = com1[1] + com2[1] + vcom3 + vcom4
             print(pos_cm, vel_cm)

@@ -149,13 +149,14 @@ if __name__ == "__main__":
 
                 rcom_sat = satellite[5]
                 vcom_sat = satellite[6]
+                print("mass:", satellite[3])
                 pos_sat_tr, vel_sat_tr, mass_sat_tr, ids_sat_tr\
                         = g2a.truncate_halo(
                                 satellite[0], satellite[1], satellite[3],
                                 satellite[4], rcut_halo)
 
                 if ((HostBFE == 1) | (HostSatUnboundBFE == 1)):
-
+                    print(mass_sat_tr[0])
                     pos_sat_em, vel_sat_em, mass_sat_em, ids_sat_em\
                             = g2a.npart_satellite(
                                     pos_sat_tr, vel_sat_tr, ids_sat_tr,
