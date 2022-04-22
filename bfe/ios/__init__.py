@@ -2,7 +2,9 @@ from .io_snaps import read_snap_coordinates
 from .io_snaps import write_coefficients
 from .io_snaps import write_coefficients_hdf5
 from .io_snaps import read_coefficients
+from .io_snaps import reshape_matrix
 from .com import com
+from .com import vcom_in
 from .com import shrinking_sphere
 from .gadget_to_ascii import truncate_halo
 from .gadget_to_ascii import sample_halo

@@ -36,17 +36,17 @@ def npart_satellite(pos_sat, vel_sat, ids_sat, pmass_sat, pmass_host):
     Sample satellite galaxies to have the same mass of the host satellite.
     """
 
-    # number of particles in satellite
+    # Number of particles in satellite
     init_sat_part = len(pos_sat)
     # Satellite total mass
     sat_tot_mass = pmass_sat*init_sat_part
-    # new number of particles of satellite
+    # New number of particles of satellite
     n_part_sat = int(sat_tot_mass/pmass_host)
-    # new particles mass
+    # New particles mass
     print('Initial number of satellite particles: ', init_sat_part)
     print('Final number of satellite particles after sampling', n_part_sat)
     rand = np.random.randint(0, init_sat_part, n_part_sat)
-    # new particles mass
+    # New particles mass
     new_part_mass = sat_tot_mass/n_part_sat
     return pos_sat[rand], vel_sat[rand], new_part_mass*np.ones(n_part_sat, dtype=float), ids_sat[rand]
 
