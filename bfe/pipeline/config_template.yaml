@@ -9,6 +9,7 @@ npartHalo : 100000000
 samplePart : 700000
 nmax : 10
 lmax : 5
+mmax : 5
 rs : 40.85 
 ncores : 4
 mpi : 1
@@ -19,6 +20,7 @@ SatBFE : 1
 Satrs : 20
 nmaxSat : 20
 lmaxSat : 20
+mmaxSat : 20
 HostBFE : 1
 SatBoundParticles : 1
 HostSatUnboundPart : 1
@@ -27,5 +29,6 @@ OutIdsBoundUnbound : 1
 PlotScatterSample : 0 
 samplePartSat : 50000
 snapformat : 1
+variance : True
 ...
 

@@ -91,7 +91,7 @@ if __name__ == "__main__":
     npart_sample_satellite = params[26]
     snapformat = params[27]
     # rcut_sat = params[26]
-    variance=False
+    variance=params[28]
 	# Printing welcome message
 		
 

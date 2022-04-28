@@ -33,6 +33,7 @@ def readparams(paramfile):
     plot_scatter_sample = d["PlotScatterSample"]
     samplePartSat = d["samplePartSat"]
     snapformat = d["snapformat"]
+    variance = d["variance"]
 
     assert type(inpath)==str, "inpath parameter  must be a string"
     assert type(snapname)==str, "snapname parameter must be a string"
@@ -53,9 +54,10 @@ def readparams(paramfile):
     assert type(SatBFE)==int, "SatBFE parameter must be an integer"
     assert type(snapformat)==int, "snap format must be an integer 0, 1, 2"
     assert snapformat <= 3, "snap format must be an integer 0, 1, 2"
+    assert type(variance) == bool, "variance format must be bool"
     return [inpath, snapname, outpath, outname, npartHalo, samplePart, nmax,
             lmax, mmax, rs, ncores, mpi, rhaloCut, initSnap, finalSnap, SatBFE,
             sat_rs, nmax_sat, lmax_sat, mmax_sat, HostBFE, SatBoundParticles,
             HostSatUnboundPart, write_snaps_ascii, out_ids_bound_unbound_sat, 
-            plot_scatter_sample, samplePartSat, snapformat]
+            plot_scatter_sample, samplePartSat, snapformat, variance]
 
