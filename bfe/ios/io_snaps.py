@@ -177,7 +177,7 @@ def read_snap_coordinates(path, snap, N_halo_part, com_frame='host', galaxy='hos
             rlmc = np.sqrt(pos_recenter3[:,0]**2 + pos_recenter3[:,1]**2 + pos_recenter3[:,2]**2)
             truncate3 = np.where(rlmc < 20)[0]
             
-            com4 = scc(np.ascontiguousarray(pos_recenter3[truncate3], dtype=float), np.ascontiguousarray(np.ones(len(truncate3))*mass[0], dtype=float), min_particles=1000, shrink_factor=0.9, starting_rmax=500, num_threads=2)
+            com4 = ssc(np.ascontiguousarray(pos_recenter3[truncate3], dtype=float), np.ascontiguousarray(np.ones(len(truncate3))*mass[0], dtype=float), min_particles=1000, shrink_factor=0.9, starting_rmax=500, num_threads=2)
 
             pos_recenter3_com = com.re_center(pos_recenter3[truncate3], np.array(com4))
             vcom4 = com.vcom_in(pos_recenter3_com, vel_recenter3[truncate3], np.ones(len(truncate3))*mass[0], rin=5) # TODO make rin value an input parameter? 
@@ -279,9 +279,12 @@ def write_coefficients_hdf5(filename, coefficients, exp_length, exp_constants, r
     hf.create_dataset('pmass', data=pmass)
     hf.create_dataset('G', data=G)
     if ndim == 5:
-        hf.create_dataset('var_Snlm', data=coefficients[:,2], shape=(nmax+1, lmax+1, mmax+1))
-        hf.create_dataset('var_Tnlm', data=coefficients[:,3], shape=(nmax+1, lmax+1, mmax+1))
-        hf.create_dataset('var_STnlm', data=coefficients[:,4], shape=(nmax+1, lmax+1, mmax+1))
+        Svar = reshape_matrix(coefficients[:,2], nmax, lmax, mmax)
+        Tvar = reshape_matrix(coefficients[:,3], nmax, lmax, mmax)
+        STvar = reshape_matrix(coefficients[:,4], nmax, lmax, mmax)
+        hf.create_dataset('var_Snlm', data=Svar, shape=(nmax+1, lmax+1, mmax+1))
+        hf.create_dataset('var_Tnlm', data=Tvar, shape=(nmax+1, lmax+1, mmax+1))
+        hf.create_dataset('var_STnlm', data=STvar, shape=(nmax+1, lmax+1, mmax+1))
     hf.close()
 
 

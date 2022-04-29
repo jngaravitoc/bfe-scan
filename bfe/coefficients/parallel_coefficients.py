@@ -41,8 +41,8 @@ class Coeff_parallel(object):
         S, T = STnlm_discrete(self.s, self.phi, self.X, self.mass, n, l, m)
 
         if self.var == True:
-            varS, varT, varST = STnlm_var_discrete(self.s, self.phi, self.X, self.mass, n, l, m)
-            return S, T, varS, varT, varST
+            Svar, Tvar, STvar = STnlm_var_discrete(self.s, self.phi, self.X, self.mass, n, l, m)
+            return S, T, Svar, Tvar, STvar
         else :
             return S, T
 
