@@ -55,10 +55,10 @@ BFE-py is a python package specialized in analyzing snapshots from idealized N-b
         - Try parallel structure discussed in articles.adsabs.harvard.edu/pdf/1995ApJ...446..717H
         - Fix results=pool() returns empty list if --ncores==1? when running in a single processor
 - known issues:
-    - currently multiprocessing return the following error when many
+    - for python versions < 3.8 multiprocessing returns the following error when many
     particles are used:
     struct.error: 'i' format requires -2147483648 <= number <= 2147483647
-    This is a known issue of multiprocessing that apparently is solved in
+    This is a known issue of multiprocessing has been solved in
     python3.8
     see :
     https://stackoverflow.com/questions/47776486/python-struct-error-i-format-requires-2147483648-number-2147483647
@@ -66,6 +66,7 @@ BFE-py is a python package specialized in analyzing snapshots from idealized N-b
 
 # dependencies:
 
+  - python3.8 or up
   - pyyaml (parameter file format)
   - scipy
   - numpy
