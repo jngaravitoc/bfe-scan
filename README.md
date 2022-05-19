@@ -14,7 +14,7 @@
 
 
 
-BFE-py is a python package specialized in analyzing snapshots from idealized N-body simulations using analytic Basis Function Expansions (BFE).
+SCF-py is a python package specialized in analyzing snapshots from idealized N-body simulations using the Self-Consitent (SCF) Field Expansion.
 
 # Features: 
   - Compute BFE expansion from a collection of snapshots
