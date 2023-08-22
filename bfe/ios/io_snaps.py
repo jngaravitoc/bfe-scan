@@ -309,12 +309,12 @@ def read_coefficients(filename):
     if 'var_Snlm' in hf.keys():
         var_Snlm = np.array(hf.get('var_Snlm'))
         coefficients.append(var_Snlm)
-    elif 'var_Tnlm' in hf.keys():
+    if 'var_Tnlm' in hf.keys():
         var_Tnlm = np.array(hf.get('var_Tnlm'))
         coefficients.append(var_Tnlm)
-    elif 'var_STnlm' in hf.keys():
+    if 'var_STnlm' in hf.keys():
         var_STnlm = np.array(hf.get('var_STnlm'))
         coefficients.append(var_STnlm)
     hf.close()
-
+    
     return coefficients, [nmax, lmax, mmax], [rs, pmass, G], rcom
