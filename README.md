@@ -35,8 +35,10 @@ SCF-py is a python package specialized in analyzing snapshots from idealized N-b
   - analysis
     - energy of coefficients
     - plotting routines
+  - exp
+    - a variety of functions to interface with EXP
   - noise
-    - routines regaring noise
+    - routines regarding noise
     
   
 # TODO:
