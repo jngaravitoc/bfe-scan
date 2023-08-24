@@ -318,3 +318,35 @@ def read_coefficients(filename):
     hf.close()
     
     return coefficients, [nmax, lmax, mmax], [rs, pmass, G], rcom
+
+
+
+def read_agama_scf(agama_scf, nmax, lmax):
+    Snlm = np.zeros((nmax+1, lmax+1, lmax+1))
+    Tnlm = np.zeros((nmax+1, lmax+1, lmax+1))
+    for n in range(nmax+1):
+        for l in range(lmax+1):
+            j=1 # j=0 is the value of n order
+            for m in range(l):
+                Tnlm[n, l, l-m] = agama_scf[n, j]*2**0.5
+                j+=1
+            for m in range(l+1):
+                #if m<0:
+                Snlm[n, l, m] = agama_scf[n, j]*(2**0.5 if m>0 else 1)
+                j+=1
+    return Snlm, Tnlm
+
+def read_agama_scf_time_series(path, snap_name, init_snap, final_snap):
+    header = genfromtxt(path + snap_name + "{:03d}.ini".format(init_snap), max_rows=8, dtype='str')
+    nmax = int(header[2][5:])
+    lmax = int(header[3][5:])
+    r0 = int(header[5][3:])
+    print('Reading coefficients with nmax={}, lmax={}, and r0={}'.format(nmax, lmax, r0))
+    nsnaps = final_snap - init_snap + 1
+    Snlmj = np.zeros((nsnaps, nmax+1, lmax+1, lmax+1))
+    Tnlmj = np.zeros_like(Snlmj)
+    
+    for k in range(init_snap, final_snap+1):
+        agama_scf = np.loadtxt(path + snap_name + '{:03d}.ini'.format(k), skiprows=10)
+        Snlmj[k], Tnlmj[k] = read_agama_scf(agama_scf, nmax, lmax)
+    return Snlmj, Tnlmj
