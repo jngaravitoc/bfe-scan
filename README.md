@@ -20,10 +20,8 @@ SCF-py is a python package specialized in analyzing snapshots from idealized N-b
   - Compute BFE expansion from a collection of snapshots
   - Separates a satellite from its host by finding bound
     satellite particles.
-  - Recenter Host and Satellite to its COM
-  - Sample satellite particles to have the same mass of the host.
   - Run in parallel for the nlm list.
-  - Write particle data in Gadget format if desired.
+
   
 # Code structure:
   - io
@@ -74,9 +72,8 @@ SCF-py is a python package specialized in analyzing snapshots from idealized N-b
   - numpy
   - gala
   - schwimmbad (python parallelization)
-  - openmp 
-  - pynbody 
-  - pygadgetreader (to read old gadget formats 1/2/3)
+  - openmp
+  - pyEXP (optional)
 
 
 # Installation:
