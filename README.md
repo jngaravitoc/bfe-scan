@@ -14,48 +14,40 @@
 
 
 
-SCF-py is a python package specialized in analyzing snapshots from idealized N-body simulations using the Self-Consitent (SCF) Field Expansion.
+BFE-py is a Python package specialized in utilizing basis function expansions (BFE) from N-body simulations. The package is designed to work and interact with specialized codes such as EXP, and to work with various BFE outputs from codes such as AGAMA, Gala, Galpy, and EXP. 
 
-# Features: 
-  - Compute BFE expansion from a collection of snapshots
-  - Separates a satellite from its host by finding bound
-    satellite particles.
-  - Run in parallel for the nlm list.
+# Some of the BFE-py features include: 
+  - Read and write coefficients from Gala, AGAMA, and EXP.
+  - Smoothing coefficients following Weinverg+98
+  - Compute BFE expansion from a collection of N-body simulation snapshots using the SCF expansion
+  - Computed bound masses of satellite galaxies.
+  - Compute energy of the coefficients
+  - Visualization of coefficients and fields
 
   
 # Code structure:
   - io
-    - handle I/O libraries for different simulations formats using [pygadgetreader](https://bitbucket.org/rthompson/pygadgetreader/src/default/)
+    - handle I/O libraries for different simulation formats using [pygadgetreader](https://bitbucket.org/rthompson/pygadgetreader/src/default/)
   - satellites
     - Finds bound particles of a Satellite
   - coefficients
-    - compute coefficients in parallel using [gala](https://github.com/adrn/gala) and schwimmbad
+    - Compute coefficients in parallel using [gala](https://github.com/adrn/gala) and schwimmbad
   - analysis
-    - energy of coefficients
+    - Energy of coefficients
     - plotting routines
   - exp
     - a variety of functions to interface with EXP
   - noise
     - routines regarding noise
     
-  
-# TODO:
-  - Parameter file:
-      - Make different parameter categories for Host and Satellites.
-      - Generalize to multiple satellites.
-      - Read COM if provided
-      - Remove gala dependency 
 
-  - Optional outputs:
-      - track bound mass fraction
-      - write output on Gadget format file
-   
-   - Implement tests
+
+ 
    - Parallelization:
-        - Try parallel structure discussed in articles.adsabs.harvard.edu/pdf/1995ApJ...446..717H
-        - Fix results=pool() returns empty list if --ncores==1? when running in a single processor
-- known issues:
-    - for python versions < 3.8 multiprocessing returns the following error when many
+        - Implement parallel structure discussed in articles.adsabs.harvard.edu/pdf/1995ApJ...446..717H
+        - Fix results=pool() returns empty list if --ncores==1 When running in a single processor
+- Known issues:
+    - For Python versions < 3.8 multiprocessing returns the following error when many
     particles are used:
     struct.error: 'i' format requires -2147483648 <= number <= 2147483647
     This is a known issue of multiprocessing has been solved in
